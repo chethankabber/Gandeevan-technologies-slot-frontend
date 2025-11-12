@@ -18,7 +18,7 @@ const Navbar = ({ admin, onMenuClick, isMobile }) => {
 
   return (
     <header
-      className="border-bottom shadow-sm py-3 px-3 px-md-4 position-sticky top-0 w-100"
+      className="border-bottom shadow-sm py-3 px-3 px-md-4 position-sticky top-0 w-100 fixed-top"
       style={{
         background:
           "linear-gradient(90deg, hsl(215, 25%, 12%) 0%, hsl(215, 25%, 10%) 100%)",

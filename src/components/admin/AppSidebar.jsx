@@ -20,16 +20,19 @@ const navigationItems = [
 export function AppSidebar({ isOpen, onClose }) {
   return (
     <>
-      {/* Mobile Overlay */}
+      {/* ✅ Mobile Overlay */}
       {isOpen && (
         <div
           className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-lg-none"
-          style={{ backdropFilter: "blur(4px)", zIndex: 1040 }}
+          style={{
+            backdropFilter: "blur(4px)",
+            zIndex: 1090, // ⬆️ increased  to appear over navbar
+          }}
           onClick={onClose}
         ></div>
       )}
 
-      {/* Sidebar */}
+      {/* ✅ Sidebar */}
       <aside
         className="position-fixed top-0 start-0 h-100 d-flex flex-column justify-content-between shadow-sm"
         style={{
@@ -37,7 +40,7 @@ export function AppSidebar({ isOpen, onClose }) {
           transform: isOpen ? "translateX(0)" : "translateX(-100%)",
           transition: "width 0.3s ease, transform 0.3s ease",
           overflow: "hidden",
-          zIndex: 1050,
+          zIndex: 1100, // ⬆️ keeps sidebar above navbar in mobile view
           background:
             "linear-gradient(180deg, hsl(215, 25%, 12%) 0%, hsl(215, 25%, 10%) 100%)",
           color: "hsl(210, 40%, 98%)",
@@ -52,7 +55,12 @@ export function AppSidebar({ isOpen, onClose }) {
           }}
         >
           {isOpen && (
-            <h6 className="text-muted text-uppercase mb-0" style={{ fontFamily: "Merriweather, serif",}}>Slot Management</h6>
+            <h6
+              className="text-muted text-uppercase mb-0"
+              style={{ fontFamily: "Merriweather, serif" }}
+            >
+              Slot Management
+            </h6>
           )}
           <Button
             variant="outline-secondary"
