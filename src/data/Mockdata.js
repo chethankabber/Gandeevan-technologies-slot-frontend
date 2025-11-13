@@ -178,4 +178,28 @@ export const mockPendingUsers = [
     email: 'charlie@example.com',
     registeredDate: '2025-01-12',
   },
+
+];
+
+
+export const mockPermissionRequests = [
+  {
+    id: "101",
+    userName: "Alice Johnson",
+    userEmail: "alice@example.com",
+    requestType: "Access Request",
+    message: "Requesting permission to access Rack A12 for maintenance.",
+    dateRequested: "2025-01-10",
+    status: "Pending",
+  },
+  {
+    id: "102",
+    userName: "Bob Smith",
+    userEmail: "bob@example.com",
+    requestType: "Return Delay",
+    message: "Requesting extension for returning items in Slot 5 by two days.",
+    dateRequested: "2025-01-11",
+    status: "Pending",
+  },
+  
 ];

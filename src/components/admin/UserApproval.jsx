@@ -2,6 +2,8 @@ import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Check, X, Mail, Calendar } from "lucide-react";
 
+
+
 const UserApproval = ({ pendingUsers, onApprove, onReject }) => {
   const handleApprove = (user) => {
     onApprove(user.id);
@@ -132,8 +134,11 @@ const UserApproval = ({ pendingUsers, onApprove, onReject }) => {
           </div>
         ))}
       </div>
+      
     </div>
   );
-};
+}; 
 
 export default UserApproval;
+
+
