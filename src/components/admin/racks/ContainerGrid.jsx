@@ -118,9 +118,11 @@ const ContainerGrid = ({
             {container.slots.map((slot) => (
               <div
                 key={slot.slotNumber}
+                id={`rack-${container.id}-slot-${slot.slotNumber}`}
                 className="col-12 col-sm-6 col-md-4 col-lg-3"
                 onClick={() => handleSlotClick(slot.slotNumber)}
                 style={{
+                     scrollMarginTop: "140px",
                   cursor: "pointer",
                   opacity: matchesFilter(slot) ? 1 : 0.35,
                 }}
