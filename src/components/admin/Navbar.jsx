@@ -49,9 +49,9 @@ const Navbar = ({ admin, onMenuClick, isMobile }) => {
           {/* Logo */}
           <div className="d-flex align-items-center gap-2">
             <img
-              src="/Gtlog000.jpg"
+              src="/GTLogos.png"
               alt="Logo"
-              style={{ height: "40px", borderRadius: "8px" }}
+              style={{ height: "60px", borderRadius: "8px" }}
             />
             {/* <h5 className="mb-0 fw-bold text-light d-none d-sm-block">
               Gandeevan Technologies
