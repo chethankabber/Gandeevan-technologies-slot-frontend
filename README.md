@@ -70,3 +70,30 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
 
 
+App.jsx
+ └─ maintains all rack/slot/item data
+
+Containers.jsx
+ └─ shows all racks
+ └─ opens AddRackModal
+
+AddRackModal.jsx
+ └─ creates new rack with slots
+
+ContainerGrid.jsx
+ └─ shows slots inside one rack
+ └─ opens SlotDetailModal
+
+SlotDetailModal.jsx
+ └─ add item
+ └─ take item
+ └─ show item history
+
+SlotCard.jsx
+ └─ UI for one slot
+
+DeleteConfirmModal.jsx
+ └─ delete slot or rack confirmation
+
+SearchBar.jsx
+ └─ search + jump to slot

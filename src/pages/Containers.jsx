@@ -9,10 +9,39 @@ import SearchBar from "../components/admin/SearchBar";
 
 import AddRackModal from "../components/admin/racks/AddRackModal";
 import ContainerGrid from "../components/admin/racks/ContainerGrid";
-
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
 const Containers = () => {
- 
+    const location = useLocation();  
+    
+    const params = new URLSearchParams(location.search);
+  const jumpRack = params.get("jumpRack");
+  const jumpSlot = params.get("jumpSlot");
+
+useEffect(() => {
+  if (!jumpRack || !jumpSlot) return;
+
+  // Delay ensures DOM is ready
+  const timer = setTimeout(() => {     
+    const el = document.getElementById(`rack-${jumpRack}-slot-${jumpSlot}`);
+
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      el.style.transition = "box-shadow 0.4s ease";
+      el.style.boxShadow = "0 0 12px 5px skyblue";       
+
+      setTimeout(() => {
+        el.style.boxShadow = "none";
+      }, 1500);
+    }
+  }, 400);
+
+  return () => clearTimeout(timer);
+}, [jumpRack, jumpSlot]);
+
+
   // It loads initialMock, but makes sure every slot has an items[] array
   // (Convert mock data to ensure each slot has items array) 
   const [containers, setContainers] = useState(() =>

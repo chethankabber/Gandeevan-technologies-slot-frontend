@@ -21,8 +21,8 @@ export const mockContainers = [
               {
                 user: "Mike Johnson",
                 qty: 1,
-                date: "2025-01-12",
-                returnDate: "2025-01-18",
+                date: "2025-07-12",
+                returnDate: "2025-10-29",
               }
             ]
           }
@@ -42,8 +42,8 @@ export const mockContainers = [
               {
                 user: "John Doe",
                 qty: 1,
-                date: "2025-01-15",
-                returnDate: "2025-01-20",
+                date: "2025-06-15",
+                returnDate: "2025-011-09",
               }
             ]
           }
@@ -98,8 +98,8 @@ export const mockContainers = [
               {
                 user: "Mike Johnson",
                 qty: 1,
-                date: "2025-01-12",
-                returnDate: "2025-01-18",
+                date: "2025-04-12",
+                returnDate: "2025-10-10",
               }
             ]
           }
@@ -122,8 +122,8 @@ export const mockContainers = [
               {
                 user: "Sarah Williams",
                 qty: 1,
-                date: "2025-01-14",
-                returnDate: "2025-01-19",
+                date: "2025-02-14",
+                returnDate: "2025-03-09",
               }
             ]
           }
@@ -148,7 +148,7 @@ export const mockContainers = [
               {
                 user: "Sarah Williams",
                 qty: 1,
-                date: "2025-01-14",
+                date: "2024-12-14",
                 returnDate: "2025-01-19",
               }
             ]
@@ -171,7 +171,7 @@ export const mockContainers = [
             quantity: 10,
             isReturnable: true,
             taken: [
-              { user: "Mike Johnson", qty: 1, date: "2025-01-12", returnDate: "2025-01-18" }
+              { user: "Mike Johnson", qty: 1, date: "2025-04-12", returnDate: "2025-07-08" }
             ]
           }
         ]
@@ -191,7 +191,7 @@ export const mockContainers = [
             quantity: 4,
             isReturnable: true,
             taken: [
-              { user: "Sarah Williams", qty: 1, date: "2025-01-14", returnDate: "2025-01-19" }
+              { user: "Sarah Williams", qty: 1, date: "2025-01-14", returnDate: "2025-02-11" }
             ]
           }
         ]
@@ -209,7 +209,7 @@ export const mockContainers = [
             quantity: 2,
             isReturnable: true,
             taken: [
-              { user: "Sarah Williams", qty: 1, date: "2025-01-14", returnDate: "2025-01-19" }
+              { user: "Sarah Williams", qty: 1, date: "2025-01-14", returnDate: "2025-02-19" }
             ]
           }
         ]
