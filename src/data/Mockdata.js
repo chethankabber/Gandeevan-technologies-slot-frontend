@@ -271,6 +271,7 @@ export const mockPermissionRequests = [
     quantity: 3,
     itemType: "Returnable", // Returnable / Non-returnable
     returnDate: "2025-01-20", // only if returnable
+    whichProject: "Slot Management",
     message: "Need tools for maintenance work.",
 
     dateRequested: "2025-01-10",
@@ -283,11 +284,27 @@ export const mockPermissionRequests = [
 
     itemName: "Motherboard",
     quantity: 2,
+    whichProject: "Slot Management",
     itemType: "Non-returnable",
     returnDate: null,
     message: "Need permanent access to the equipment.",
 
     dateRequested: "2025-01-11",
+    status: "Pending",
+  },
+  {
+    id: "103",
+    userName: "Raju JK",
+    userEmail: "rajus@example.com",
+
+    itemName: "Register",
+    quantity: 2,
+    whichProject: "Slot Management",
+    itemType: "Returnable",
+    returnDate: "2025-03-11",
+    message: "Need permanent access to the equipment.",
+
+    dateRequested: "2025-02-21",
     status: "Pending",
   },
 ];

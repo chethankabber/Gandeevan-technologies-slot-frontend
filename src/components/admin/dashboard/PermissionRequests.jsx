@@ -1,14 +1,13 @@
-
 import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import PermissionRequestModal from "./PermissionRequestModal";
 
-const PermissionRequests = ({                   //This component receives three props from PermissionRequests.jsx
+const PermissionRequests = ({
   permissionRequests,
   onApprove,
   onReject,
 }) => {
-  const [selectedRequest, setSelectedRequest] = useState(null); // State to track which request is selected for modal
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   return (
     <>
@@ -40,33 +39,82 @@ const PermissionRequests = ({                   //This component receives three 
             permissionRequests.map((req) => (
               <div
                 key={req.id}
-                className="p-3 mb-3 rounded d-flex justify-content-between align-items-center"
+                className="p-3 mb-3 rounded"
                 style={{
                   backgroundColor: "hsl(215, 25%, 14%)",
                   border: "1px solid hsl(215, 20%, 25%)",
                   cursor: "pointer",
-                }}                                       //onClick sets selectedRequest to this request → which opens modal.
-                onClick={() => setSelectedRequest(req)} // ← OPEN MODAL
+                }}
               >
-                <div>
-                  <h6 className="fw-bold mb-1">{req.userName}</h6>
+                {/* ----------- ROW WRAPPER (RESPONSIVE) ----------- */}
+                <div
+                  className="d-flex flex-column flex-md-row justify-content-between align-items-start w-100"
+                  onClick={() => setSelectedRequest(req)}
+                >
+                  {/* LEFT SIDE — USER INFO */}
+                  <div className="mb-3 mb-md-0">
+                    <h6 className="fw-bold mb-1">{req.userName}</h6>
 
-                  <div className="text-muted small d-flex gap-4">
-                    <span>{req.itemName}</span>
-                    <span>{req.dateRequested}</span>
-                    <span>Qty: {req.quantity}</span>
+                    <div className="text-muted small d-flex flex-wrap gap-3">
+                      <span>{req.itemName}</span>
+                      <span>{req.dateRequested}</span>
+                      <span>Qty: {req.quantity}</span>
+                      <span>
+                        Return:{" "}
+                        {req.itemType === "Returnable"
+                          ? req.returnDate
+                          : "No"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* RIGHT SIDE — BUTTONS + DETAILS */}
+                  <div className="d-flex flex-column align-items-end gap-2">
+
+                    {/* BUTTON ROW (STACKS ON MOBILE) */}
+                    <div className="d-flex flex-wrap gap-2">
+                      <button
+                        className="btn btn-success btn-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onApprove(req.id);
+                        }}
+                      >
+                        Approve
+                      </button>
+
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onReject(req.id);
+                        }}
+                      >
+                        Reject
+                      </button>
+                    </div>
+
+                    {/* DETAILS LINK */}
+                    <span
+                      className="text small"
+                      style={{ cursor: "pointer" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedRequest(req);
+                      }}
+                    >
+                      Click for details →
+                    </span>
                   </div>
                 </div>
-
-                <span className="text small">Click for details →</span>
               </div>
             ))
           )}
         </div>
       </div>
 
-      {/* Modal */}
-      {selectedRequest && (      // If a request is selected, show the modal
+      {/* MODAL */}
+      {selectedRequest && (
         <PermissionRequestModal
           request={selectedRequest}
           onClose={() => setSelectedRequest(null)}

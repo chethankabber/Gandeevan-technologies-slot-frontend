@@ -16,7 +16,7 @@ const DeleteConfirmModal = ({ show, title, message, onConfirm, onCancel }) => {
   return (
     <Modal show={show} onHide={onCancel} centered>
       <Modal.Header closeButton>
-        <Modal.Title className="text-danger">{title}</Modal.Title>
+        <Modal.Title className="text-">{title}</Modal.Title>
       </Modal.Header>
 
       <Modal.Body>
@@ -29,7 +29,7 @@ const DeleteConfirmModal = ({ show, title, message, onConfirm, onCancel }) => {
         </Button>
 
         <Button variant="danger" onClick={onConfirm}>
-          Yes, Delete
+          Delete
         </Button>
       </Modal.Footer>
     </Modal>

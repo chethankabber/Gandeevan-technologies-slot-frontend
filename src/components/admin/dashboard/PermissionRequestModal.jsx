@@ -20,7 +20,7 @@ const PermissionRequestModal = ({ request, onClose, onApprove, onReject }) => { 
         <p><strong>Item:</strong> {request.itemName}</p>
         <p><strong>Quantity:</strong> {request.quantity}</p>
         <p><strong>Request Date:</strong> {request.dateRequested}</p>
-
+        <p><strong>For Which Project:</strong> {request.whichProject}</p>
         <p><strong>Message:</strong></p>
         <div
   style={{
@@ -39,14 +39,13 @@ const PermissionRequestModal = ({ request, onClose, onApprove, onReject }) => { 
 
         <p>
           <strong>Returnable:</strong>{" "}
-          {request.isReturnable ? "Yes" : "No"}
+          {request.itemType === "Returnable" ? "Yes" : "No"}
         </p>
 
-        {request.isReturnable && (
-          <p>
-            <strong>Return Date:</strong> {request.returnDate}
-          </p>
-        )}
+        {request.itemType === "Returnable" && (
+                <p><strong>Return Date:</strong> {request.returnDate}</p>
+          )}
+        
       </Modal.Body>
 
       <Modal.Footer>
