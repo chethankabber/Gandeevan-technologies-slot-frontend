@@ -8,6 +8,11 @@ export const mockManager = {
   email: "manager@gmail.com",
 };
 
+export const mockUser = {
+  name: "Darshan H",
+  email : "user@gmail.com"
+}
+
 // data/Mockdata.js
 export const mockContainers = [
   {

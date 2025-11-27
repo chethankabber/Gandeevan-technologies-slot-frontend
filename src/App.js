@@ -2,31 +2,35 @@
 import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import AdminDashboard from "./pages/AdminDashboard";
-import Dashboard from "./pages/Dashboard";
+/* === Universal Layout & Dashboard === */
+import UniversalLayout from "./components/common/UniversalLayout";
+import UniversalDashboard from "./pages/dashboard/UniversalDashboard";
+
+/* === Admin Pages === */
 import Containers from "./pages/Containers";
-import ContainerDetail from "./pages/ContainerDetail";
+//import ContainerDetail from "./pages/ContainerDetail";
 import History from "./pages/History";
 import AllUsers from "./pages/AllUsers";
-import NotFound from "./pages/NotFound";
 
-import ManagerLayout from "./pages/manager/ManagerLayout";
-import ManagerDashboard from "./pages/manager/ManagerDashboard";
+/* === Manager Pages === */
 import ManagerRacks from "./pages/manager/ManagerRacks";
 import ManagerHistory from "./pages/manager/ManagerHistory";
 import ManagerUsers from "./pages/manager/ManagerUsers";
 import ManagerProfile from "./pages/manager/ManagerProfile";
 
-import Login from "./auth/Login";
-import Register from "./auth/Register";
-
-// NEW user layout + pages
-import UserLayout from "./pages/users/UserLayout";
-import UserDashboard from "./pages/users/UserDashboard";
+/* === User Pages === */
 import UserRacks from "./pages/users/UserRacks";
 import UserHistory from "./pages/users/UserHistory";
 import UserProfile from "./pages/users/UserProfile";
 
+/* === Auth === */
+import Login from "./auth/Login";
+import Register from "./auth/Register";
+
+/* === Not Found === */
+import NotFound from "./pages/NotFound";
+
+/* === Mock Data === */
 import {
   mockContainers,
   mockPermissionRequests,
@@ -34,6 +38,7 @@ import {
 } from "./data/Mockdata";
 
 function App() {
+  /* ---------------- Containers ---------------- */
   const [containers, setContainers] = useState(
     mockContainers.map((c) => ({
       ...c,
@@ -44,11 +49,15 @@ function App() {
     }))
   );
 
+  const updateContainers = (updateFn) => {
+    setContainers((prev) => updateFn(prev));
+  };
+
+  /* ---------------- Permission Requests ---------------- */
   const [permissionRequests, setPermissionRequests] = useState(
     mockPermissionRequests
   );
 
-  // ---------- EXISTING ADMIN HANDLERS (kept as-is) ----------
   const handlePermissionApprove = (id) => {
     setPermissionRequests((prev) =>
       prev.map((req) =>
@@ -58,130 +67,118 @@ function App() {
   };
 
   const handlePermissionReject = (id) => {
-    setPermissionRequests((prev) =>
-      prev.filter((req) => req.id !== id)
-    );
-  };
-
-  const updateContainers = (updateFn) => {
-    setContainers((prev) => updateFn(prev));
+    setPermissionRequests((prev) => prev.filter((req) => req.id !== id));
   };
 
   const approvedPermissions = permissionRequests.filter(
     (req) => req.status === "Approved"
   );
 
-  // --------- NEW: User-related helpers & handlers ----------
-  // NOTE: In this mock, logged-in user is identified by email "user@gmail.com".
-  // You can replace this with actual auth later.
+  /* ---------------- User Mock Login ---------------- */
   const currentUserEmail = "user@gmail.com";
-  const currentUser = mockUsers.find((u) => u.email === currentUserEmail) || {
-    name: "User A",
-    email: currentUserEmail,
-  };
 
-  // Create a new user permission request (from User Dashboard modal)
-  const handleCreatePermissionRequest = (newRequestData) => {
-    // create unique id (simple mock)
+  const currentUser =
+    mockUsers.find((u) => u.email === currentUserEmail) || {
+      name: "User A",
+      email: currentUserEmail,
+    };
+
+  const getUserRequests = () =>
+    permissionRequests.filter((r) => r.userEmail === currentUserEmail);
+
+  const handleCreatePermissionRequest = (data) => {
     const newId = (Math.floor(Math.random() * 90000) + 10000).toString();
-    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const today = new Date().toISOString().slice(0, 10);
 
-    const requestObj = {
+    const obj = {
       id: newId,
       userName: currentUser.name,
       userEmail: currentUser.email,
-      itemName: newRequestData.itemName,
-      quantity: Number(newRequestData.quantity),
-      itemType: newRequestData.returnable ? "Returnable" : "Non-returnable",
-      returnDate: newRequestData.returnable ? newRequestData.returnDate : null,
-      whichProject: newRequestData.projectName,
-      message: newRequestData.message || "",
+      itemName: data.itemName,
+      quantity: Number(data.quantity),
+      itemType: data.returnable ? "Returnable" : "Non-returnable",
+      returnDate: data.returnable ? data.returnDate : null,
+      whichProject: data.projectName,
+      message: data.message || "",
       dateRequested: today,
       status: "Pending",
     };
 
-    setPermissionRequests((prev) => [requestObj, ...prev]);
+    setPermissionRequests((prev) => [obj, ...prev]);
   };
 
-  // Cancel a pending request (user action)
   const handleCancelRequest = (requestId) => {
     setPermissionRequests((prev) =>
-      prev.filter((r) => !(r.id === requestId && r.status === "Pending"))
+      prev.filter(
+        (r) => !(r.id === requestId && r.status === "Pending")
+      )
     );
   };
 
-  // Helper: get only this user's requests
-  const getUserRequests = (email = currentUserEmail) =>
-    permissionRequests.filter((r) => r.userEmail === email);
-
-  // ----------------------------------------------------------------
-
+  /* ---------------- RETURN JSX ---------------- */
   return (
     <BrowserRouter>
       <Routes>
+        {/* Redirect root → login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* LOGIN + REGISTER */}
+        {/* Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* =========================
-            USER ROUTES (NEW)
-            Base path: /users
-        ========================== */}
-        <Route path="/users" element={<UserLayout />}>
-
-            {/* USER DASHBOARD */}
-           <Route
-             index
-              element={
-               <UserDashboard
-                  containers={containers}
-                   permissionRequests={getUserRequests()}
-                    onCreateRequest={handleCreatePermissionRequest}
-                    onCancelRequest={handleCancelRequest}
-                    currentUser={currentUser}
-                />
-                }
-            />
-
-            {/* USER RACKS */}
-            <Route
-              path="racks"
-              element={<UserRacks containers={containers} />}
-             />
-
-             {/* USER HISTORY */}
-               <Route
-                path="history"
-                 element={
-                 <UserHistory
-                    containers={containers}
-                     currentUserEmail={currentUserEmail}
-                   />
-                 }
-               />
-
-             {/* USER PROFILE  → FIXED HERE! */}
-              <Route
-                path="profile"
-                    element={
-                     <UserProfile
-                      currentUser={mockUsers.find((u) => u.email === "user@gmail.com")}
-                     onUpdateUser={(updated) => console.log(updated)}
-                     />
-                    }
-                  />
-
-             </Route>
-        {/* =========================
-            ADMIN ROUTES (unchanged)
-        ========================== */}
-        <Route path="/admin" element={<AdminDashboard />}>
+        {/* ===================================================
+                    USER ROUTES (UNIVERSAL LAYOUT)
+        =================================================== */}
+        <Route path="/users/*" element={<UniversalLayout role="user" />}>
           <Route
-            index
+            path="dashboard"
             element={
-              <Dashboard
+              <UniversalDashboard
+                role="user"
+                containers={containers}
+                permissionRequests={getUserRequests()}
+                onCreateRequest={handleCreatePermissionRequest}
+                onCancelRequest={handleCancelRequest}
+                currentUser={currentUser}
+              />
+            }
+          />
+
+          <Route path="racks" element={<UserRacks containers={containers} />} />
+
+          <Route
+            path="history"
+            element={
+              <UserHistory
+                containers={containers}
+                currentUserEmail={currentUserEmail}
+              />
+            }
+          />
+
+          <Route
+            path="profile"
+            element={
+              <UserProfile
+                currentUser={currentUser}
+                onUpdateUser={(u) => console.log(u)}
+              />
+            }
+          />
+
+          {/* Default redirect */}
+          <Route index element={<Navigate to="/users/dashboard" replace />} />
+        </Route>
+
+        {/* ===================================================
+                    ADMIN ROUTES (UNIVERSAL LAYOUT)
+        =================================================== */}
+        <Route path="/admin/*" element={<UniversalLayout role="admin" />}>
+          <Route
+            path="dashboard"
+            element={
+              <UniversalDashboard
+                role="admin"
                 containers={containers}
                 permissionRequests={permissionRequests}
                 onPermissionApprove={handlePermissionApprove}
@@ -201,56 +198,64 @@ function App() {
             }
           />
 
-          <Route
+          {/* <Route
             path="container/:id"
             element={<ContainerDetail containers={containers} />}
-          />
+          /> */}
 
           <Route path="history" element={<History />} />
           <Route path="users" element={<AllUsers />} />
+
+          {/* Default redirect */}
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
         </Route>
 
-        {/* =========================
-    MANAGER ROUTES (unchanged)
-========================== */}
-<Route path="/manager" element={<ManagerLayout />}>
-    <Route
-      index
-      element={
-        <ManagerDashboard
-          containers={containers}
-          approvedPermissions={approvedPermissions}
-        />
-      }
-    />
+        {/* ===================================================
+                    MANAGER ROUTES (UNIVERSAL LAYOUT)
+        =================================================== */}
+        <Route path="/manager/*" element={<UniversalLayout role="manager" />}>
+          <Route
+            path="dashboard"
+            element={
+              <UniversalDashboard
+                role="manager"
+                containers={containers}
+                approvedPermissions={approvedPermissions}
+              />
+            }
+          />
 
-    <Route
-      path="racks"
-      element={
-        <ManagerRacks
-          containers={containers}
-          setContainers={setContainers}
-          updateContainers={updateContainers}
-        />
-      }
-    />
+          <Route
+            path="racks"
+            element={
+              <ManagerRacks
+                containers={containers}
+                setContainers={setContainers}
+                updateContainers={updateContainers}
+              />
+            }
+          />
 
-    <Route path="history" element={<ManagerHistory />} />
+          <Route path="history" element={<ManagerHistory />} />
+          <Route
+            path="profile"
+            element={
+              <ManagerProfile
+                currentUser={mockUsers.find(
+                  (u) => u.email === "manager@gmail.com"
+                )}
+                onUpdateUser={(u) => console.log(u)}
+              />
+            }
+          />
 
-    <Route
-      path="profile"
-      element={
-        <ManagerProfile
-          currentUser={mockUsers.find((u) => u.email === "manager@gmail.com")}
-          onUpdateUser={(updated) => console.log(updated)}
-        />
-      }
-    />
+          <Route path="users" element={<ManagerUsers />} />
 
-    <Route path="users" element={<ManagerUsers />} />
-</Route>
+          {/* Default redirect */}
+          <Route index element={<Navigate to="/manager/dashboard" replace />} />
+        </Route>
 
-
+        {/* NOT FOUND */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

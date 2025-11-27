@@ -1,24 +1,30 @@
-// src/pages/manager/ManagerLayout.jsx
+// src/components/common/UniversalLayout.jsx
 import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
-import ManagerNavbar from "../../components/manager/ManagerNavbar";
-import SidebarManager from "../../components/manager/ManagerSidebar";
-import {
-  mockManager,
-} from "../../data/Mockdata";
 
-const ManagerLayout = () => {
+import Navbar from "./Navbar";
+import Sidebar from "./Sidebar";
+
+import { mockAdmin, mockManager, mockUser } from "../../data/Mockdata";
+
+const UniversalLayout = ({ role }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
 
-  // Detect screen size
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 992);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const getUserData = () => {
+    if (role === "admin") return mockAdmin;
+    if (role === "manager") return mockManager; 
+    if (role === "user")  return mockUser;
+    return null;
+  };
 
   return (
     <div
@@ -30,10 +36,8 @@ const ManagerLayout = () => {
         overflow: "hidden",
       }}
     >
-      {/* SIDEBAR */}
-      <SidebarManager isOpen={sidebarOpen} onClose={toggleSidebar} />
+      <Sidebar role={role} isOpen={sidebarOpen} onClose={toggleSidebar} />
 
-      {/* MAIN AREA */}
       <div
         className="d-flex flex-column flex-grow-1"
         style={{
@@ -42,14 +46,8 @@ const ManagerLayout = () => {
           width: "100%",
         }}
       >
-        {/* NAVBAR */}
-        <ManagerNavbar
-          manager={{ name: mockManager.name, email: mockManager.email, }}
-          onMenuClick={toggleSidebar}
-          isMobile={isMobile}
-        />
+        <Navbar role={role} data={getUserData()} onMenuClick={toggleSidebar} isMobile={isMobile} />
 
-        {/* PAGE CONTENT */}
         <main
           className="flex-grow-1 p-4"
           style={{
@@ -64,4 +62,4 @@ const ManagerLayout = () => {
   );
 };
 
-export default ManagerLayout;
+export default UniversalLayout;
