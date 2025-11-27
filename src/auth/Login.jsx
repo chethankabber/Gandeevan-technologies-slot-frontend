@@ -105,7 +105,7 @@ const Login = () => {
 
             <button
               type="submit"
-              className="btn w-100"
+              className="btn w-100 mt-3"
               style={{
                 backgroundColor: "hsl(210, 40%, 50%)",
                 color: "hsl(215, 25%, 12%)",
