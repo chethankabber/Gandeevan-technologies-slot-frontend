@@ -9,63 +9,76 @@ const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // ROUTING BASED ON EMAIL ONLY (NO PASSWORD CHECK)
     if (email === "admin@gmail.com") {
       navigate("/admin");
-    } 
-    else if (email === "manager@gmail.com") {
+    } else if (email === "manager@gmail.com") {
       navigate("/manager");
-    }else if(email === "user@gmail.com"){
-      navigate("/users")
+    } else if (email === "user@gmail.com") {
+      navigate("/users");
     }
-    
   };
 
   return (
     <div
-      className="d-flex"
+      className="d-flex align-items-center justify-content-center"
       style={{
         minHeight: "100vh",
-        overflow: "hidden",
         backgroundColor: "hsl(215, 30%, 10%)",
         color: "hsl(210, 40%, 98%)",
+        padding: "20px",
       }}
     >
       <div
-        className="container d-flex justify-content-center align-items-center"
-        style={{ minHeight: "100vh" }}
+        className="d-flex flex-column flex-md-row align-items-center justify-content-between p-4 rounded"
+        style={{
+          backgroundColor: "hsl(215, 25%, 14%)",
+          border: "1px solid hsl(215, 20%, 25%)",
+          width: "100%",
+          maxWidth: "800px",
+          minHeight: "450px",
+        }}
       >
+        {/* LEFT SIDE LOGO SECTION */}
         <div
-          className="card p-4"
-          style={{
-            backgroundColor: "hsl(215, 25%, 14%)",
-            color: "hsl(210, 40%, 98%)",
-            border: "1px solid hsl(215, 20%, 25%)",
-            width: "60%",
-            maxWidth: "400px",
-          }}
+          className="d-flex flex-column align-items-center justify-content-center text-center mb-4 mb-md-0"
+          style={{ width: "100%", maxWidth: "350px" }}
         >
-             <div className="d-flex align-items-center text-center justify-content-center">
-            <img
-              src="/GTLogos.png"
-              alt="Logo"
-              style={{ height: "80px", borderRadius: "8px" }}
-            />
-            {/* <h5 className="mb-0 fw-bold text-light d-none d-sm-block">
-              Gandeevan Technologies
-            </h5> */}
-          </div>
-          {/* <h5 className="mb-2 fw-bold text-light text-center">Gandeevan Technologies</h5>  */}
-          <h2 className="mb-4 text-center">Login</h2>
+          <img
+            src="/GTLogos.png"
+            alt="Logo"
+            style={{
+              height: "110px",
+              objectFit: "contain",
+              marginBottom: "15px",
+            }}
+          />
+        </div>
+
+        {/* VERTICAL LINE */}
+        <div
+          className="d-none d-md-block"
+          style={{
+            width: "2px",
+            backgroundColor: "hsl(215, 25%, 18%)",
+            height: "300px",
+            margin: "0 20px",
+          }}
+        ></div>
+
+        {/* RIGHT SIDE LOGIN FORM */}
+        <div
+          className="p-3"
+          style={{ width: "100%", maxWidth: "350px" }}
+        >
+          <h2 className="text-center mb-4">Login</h2>
 
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label htmlFor="email" className="form-label">Email address</label>
+              <label className="form-label">Email address</label>
               <input
                 type="email"
-                className="form-control"
-                id="email"
                 placeholder="Enter email"
+                className="form-control"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={{
@@ -76,13 +89,12 @@ const Login = () => {
               />
             </div>
 
-            <div className="mb-5">
-              <label htmlFor="password" className="form-label">Password</label>
+            <div className="mb-4">
+              <label className="form-label">Password</label>
               <input
                 type="password"
-                className="form-control"
-                id="password"
                 placeholder="Password"
+                className="form-control"
                 style={{
                   backgroundColor: "hsl(215, 25%, 12%)",
                   color: "hsl(210, 40%, 98%)",
@@ -93,11 +105,13 @@ const Login = () => {
 
             <button
               type="submit"
-              className="btn w-100 mb-4"
+              className="btn w-100"
               style={{
                 backgroundColor: "hsl(210, 40%, 50%)",
                 color: "hsl(215, 25%, 12%)",
                 border: "1px solid hsl(215, 20%, 25%)",
+                fontWeight: "600",
+                padding: "10px",
               }}
             >
               Login
