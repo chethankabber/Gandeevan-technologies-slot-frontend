@@ -25,7 +25,7 @@ import UserProfile from "./pages/users/UserProfile";
 
 /* === Auth === */
 import Login from "./auth/Login";
-import Register from "./auth/Register";
+//import Register from "./auth/Register";
 
 /* === Not Found === */
 import NotFound from "./pages/NotFound";
@@ -124,7 +124,7 @@ function App() {
 
         {/* Auth */}
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* <Route path="/register" element={<Register />} /> */}
 
         {/* ===================================================
                     USER ROUTES (UNIVERSAL LAYOUT)
