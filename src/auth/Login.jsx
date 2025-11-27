@@ -93,7 +93,7 @@ const Login = () => {
 
             <button
               type="submit"
-              className="btn w-100"
+              className="btn w-100 mb-4"
               style={{
                 backgroundColor: "hsl(210, 40%, 50%)",
                 color: "hsl(215, 25%, 12%)",
@@ -104,7 +104,7 @@ const Login = () => {
             </button>
           </form>
 
-          <div
+          {/* <div
             className="text-center mt-3"
             style={{
               cursor: "pointer",
@@ -120,7 +120,7 @@ const Login = () => {
                 REGISTER
               </span>
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
