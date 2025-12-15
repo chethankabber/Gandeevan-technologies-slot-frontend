@@ -1,121 +1,195 @@
-// // src/pages/manager/ManagerDashboard.jsx
-// import React, { useState } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { UserRound, UserCircle } from "lucide-react";
+// src/pages/manager/ManagerDashboard.jsx
+import React, { useState, useEffect } from "react";
+import { UserCircle, Mail } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import api from "../../api/axios";
+import NotificationToast from "../../components/common/NotificationToast";
 
-// import LowStockCard from "../../components/admin/dashboard/LowStockCard";
-// import ItemDueCard from "../../components/admin/dashboard/DueDatesCard";
-// import ContainerSummaryCard from "../../components/admin/dashboard/ContainerSummaryCard";
+// Manager Components
+import ManagerPermissionModal from "../../components/manager/ManagerPermissionModal";
+import ContainerSummaryCard from "../../components/admin/dashboard/ContainerSummaryCard";
+import ItemDueCard from "../../components/admin/dashboard/DueDatesCard";
+import LowStockCard from "../../components/admin/dashboard/LowStockCard";
 
-// import ManagerPermissionModal from "../../components/manager/ManagerPermissionModal";
+const ManagerDashboard = () => {
+  const navigate = useNavigate();
 
-// const ManagerDashboard = ({ containers, approvedPermissions, }) => {
-//   const navigate = useNavigate();
-//   const [selectedReq, setSelectedReq] = useState(null);
-//   const [showModal, setShowModal] = useState(false);
+  const [approvedPermissions, setApprovedPermissions] = useState([]);
+  const [racks, setRacks] = useState([]);
 
-//   // When manager gives item → remove card
-//   const handleGivenToUser = (id) => {
-//     const updated = approvedPermissions.filter((req) => req.id !== id);
-//     selectedReq.wasGiven = true; // local mark
-//     setShowModal(false);
+  const [showManagerModal, setShowManagerModal] = useState(false);
+  const [selectedReq, setSelectedReq] = useState(null);
+  const [lowStock, setLowStock] = useState([])
 
-//     // refresh page UI by forcing re-render
-//     window.location.reload();
-//   };
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    bg: "success",
+  });
 
-//   const jumpToSlot = (containerId, slotNumber) => {
-//     navigate(`/manager/racks?jumpRack=${containerId}&jumpSlot=${slotNumber}`);
-//   };
+  const jumpToSlot = (rackId, slotNumber) => {
+    navigate(`/manager/racks?jumpRack=${rackId}&jumpSlot=${slotNumber}`);
+  };
+  
 
-//   return (
-//     <div className="container my-4">
-//       <h2 className="fw-bold mb-3">Manager Dashboard</h2>
-//       <p className="text-muted">Overview of racks, items and approvals</p>
+  const loadLimitedStock = async () => {
+  try {
+    const res = await api.get("/manager/limitedStock");
+    setLowStock(res.data.data || []);
+  } catch (err) {
+    console.error("Failed to fetch limited stock:", err);
+  }
+ }; 
 
-//       {/* APPROVED REQUESTS */}
-//       <div
-//         className="card p-3 mb-4"
-//         style={{
-//           background: "hsl(215,25%,12%)",
-//           border: "1px solid hsl(215,20%,25%)",
-//           color: "white",
-//         }}
-//       >
-//         <h5 className="fw-bold mb-3">Approved Requests</h5>
+  const loadApproved = async () => {
+    try {
+      const res = await api.get("/manager/getApprovedRequests");
+      setApprovedPermissions(res.data.data || []);
+    } catch (err) {
+      console.error("Failed to fetch approved:", err);
+    }
+  };
 
-//         {approvedPermissions.length === 0 ? (
-//           <p className="text-muted">No approved permissions yet.</p>
-//         ) : (
-//           approvedPermissions.map((req) => (
-//             <div
-//               key={req.id}
-//               className="d-flex justify-content-between align-items-center p-3 mb-3 rounded"
-//               style={{
-//                 background: "hsl(215,25%,16%)",
-//                 border: "1px solid hsl(215,20%,25%)",
-//                 cursor: "pointer",
-//               }}
-//               onClick={() => {
-//                 setSelectedReq(req);
-//                 setShowModal(true);
-//               }}
-//             >
-//               {/* LEFT SIDE */}
-//               {/* <div className="d-flex align-items-center gap-2 mb-2"> */}
-        
-    
-//               <div>
-//                 <div className="fw-bold mb-0"><UserCircle size={22} className="text-secondary m-2"/>{req.userName}</div>
-//                 <div className="text-muted">{req.userEmail}</div>
-//                 <div className="text-muted">Project name: {req.whichProject}</div>
-//               </div>
+  const loadRacks = async () => {
+    try {
+      const res = await api.get("/racks/getAllRacks");
+      setRacks(res.data.data || []);
+    } catch (err) {
+      console.error("Failed to fetch racks:", err);
+    }
+  };
 
-//               {/* CENTER */}
-//               <div>
-//               <div className="text-muted ">ItemName : {req.itemName}</div>
-//               <div className=" text-muted">Qty: {req.quantity}</div>
-              
-//               </div>
-//               {/* RIGHT SIDE */}
-//               <div className="text-end">
-//                 <div className="text-secondary fw-bold">View Details</div>
-                
-//               </div>
-//             </div>
-//           ))
-//         )}
-//       </div>
+  useEffect(() => {
+    loadApproved();
+    loadRacks();
+    loadLimitedStock();
+  }, []);
 
-//       {/* RACK SUMMARY */}
-//       <div className="row g-3 mb-4">
-//         {containers.map((rack) => (
-//           <div className="col-12 col-sm-6 col-lg-4" key={rack.id}>
-//             <ContainerSummaryCard container={rack} basePath="/manager/racks" />
-//           </div>
-//         ))}
-//       </div>
+  return (
+    <div className="container my-4">
+      <h2 className="fw-bold mb-3">Manager Dashboard</h2>
+      <p className="text-muted">Manage racks & issue items to users</p>
 
-//       {/* LOW STOCK + DUE ITEMS */}
-//       <div className="row g-4">
-//         <div className="col-lg-6">
-//           <ItemDueCard containers={containers} />
-//         </div>
+      {/* Approved Permissions */}
+      <div className="card p-3 mb-4 bg-dark text-white">
+        <h5 className="fw-bold mb-3">Pending Item to Issue</h5>
 
-//         <div className="col-lg-6">
-//           <LowStockCard containers={containers} onJumpToSlot={jumpToSlot} />
-//         </div>
-//       </div>
+        {approvedPermissions.length === 0 ? (
+          <p className="text-muted">No approved pending permissions.</p>
+        ) : (
+          approvedPermissions.map((req) => (
+            <div
+              key={req._id}
+              className="p-3 mb-3 rounded d-flex"
+              style={{
+                backgroundColor: "#1b2430",
+                cursor: "pointer",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+              onClick={() => {
+                setSelectedReq(req);
+                setShowManagerModal(true);
+              }}
+            >
+              {/* LEFT SIDE */}
+              <div className="d-flex align-items-center gap-3" style={{ width: "33%" }}>
+                <UserCircle size={30} className="text-primary" />
+                <div>
+                  <div className=" text-white">{req.user.name}</div>
 
-//       {/* MODAL */}
-//       <ManagerPermissionModal
-//         show={showModal}
-//         onClose={() => setShowModal(false)}
-//         request={selectedReq}
-//         onGiven={handleGivenToUser}
-//       />
-//     </div>
-//   );
-// };
+                  <div
+                    className="text-muted"
+                    style={{
+                      fontSize: "0.85rem",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <Mail size={16} />
+                    {req.user.email}
+                  </div>
+                </div>
+              </div>
 
-// export default ManagerDashboard;
+              {/* CENTER */}
+              <div
+                style={{
+                  width: "34%",
+                  textAlign: "center",
+                  color: "white",
+                  
+                  fontSize: "0.95rem",
+                }}
+              >
+                <div>Item: {req.itemName}</div>
+                <div>Qty: {req.quantity}</div>
+              </div>
+
+              {/* RIGHT SIDE */}
+              <div
+                style={{
+                  width: "33%",
+                  textAlign: "right",
+                  color: "#7b7d7eff",
+                  fontWeight: "bold",
+                  fontSize: "0.95rem",
+                }}
+              >
+                Details →
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Rack Summary */}
+      <div className="row g-3 mb-4">
+        {racks.map((rack) => (
+          <div key={rack._id} className="col-sm-6 col-lg-4">
+            <ContainerSummaryCard container={rack} basePath="/manager/racks" />
+          </div>
+        ))}
+      </div>
+
+      {/* Stock Alerts */}
+      <div className="row g-4">
+        <div className="col-lg-6">
+          <ItemDueCard  />
+        </div>
+        <div className="col-lg-6">
+          <LowStockCard lowStock={lowStock} onJumpToSlot={jumpToSlot} />
+        </div>
+      </div>
+
+      {/* Modal */}
+      {showManagerModal && (
+        <ManagerPermissionModal
+          show={showManagerModal}
+          onClose={() => setShowManagerModal(false)}
+          request={selectedReq}
+          onGiven={() => {
+            loadApproved();
+            loadRacks();
+            setToast({
+              show: true,
+              message: "Item successfully issued!",
+              bg: "success",
+            });
+          }}
+        />
+      )}
+
+      {/* Toast */}
+      <NotificationToast
+        show={toast.show}
+        onClose={() => setToast({ ...toast, show: false })}
+        message={toast.message}
+        bg={toast.bg}
+      />
+    </div>
+  );
+};
+
+export default ManagerDashboard;
