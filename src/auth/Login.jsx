@@ -1,20 +1,56 @@
 // src/pages/Login.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
+import NotificationToast from "../components/common/NotificationToast";
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    bg: "success",
+  });
+
+  const showToast = (message, bg = "danger") => {
+    setToast({ show: true, message, bg });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (email === "admin@gmail.com") {
-      navigate("/admin");
-    } else if (email === "manager@gmail.com") {
-      navigate("/manager");
-    } else if (email === "user@gmail.com") {
-      navigate("/users");
+    if (!email.trim()) {
+      return showToast("Please enter your email", "danger");
+    }
+
+    if (!password.trim()) {
+      return showToast("Please enter your password", "danger");
+    }
+
+    try {
+      const response = await api.post("/auth/login", { email, password });
+
+      // SUCCESS TOAST
+      showToast("Login successful!", "success");
+
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("role", response.data.user.role);
+
+      const userRole = response.data.user.role;
+
+      setTimeout(() => {
+        if (userRole === "admin") navigate("/admin");
+        else if (userRole === "manager") navigate("/manager");
+        else if (userRole === "user") navigate("/users");
+        else showToast("Unknown user role", "danger");
+      }, 800);
+    } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || "Unable to login, try again!";
+      showToast(errorMsg, "danger");
     }
   };
 
@@ -28,6 +64,14 @@ const Login = () => {
         padding: "20px",
       }}
     >
+      {/* 🔔 Toast Notification */}
+      <NotificationToast
+        show={toast.show}
+        onClose={() => setToast({ ...toast, show: false })}
+        message={toast.message}
+        bg={toast.bg}
+      />
+
       <div
         className="d-flex flex-column flex-md-row align-items-center justify-content-between p-4 rounded"
         style={{
@@ -66,10 +110,7 @@ const Login = () => {
         ></div>
 
         {/* RIGHT SIDE LOGIN FORM */}
-        <div
-          className="p-3"
-          style={{ width: "100%", maxWidth: "350px" }}
-        >
+        <div className="p-3" style={{ width: "100%", maxWidth: "350px" }}>
           <h2 className="text-center mb-4">Login</h2>
 
           <form onSubmit={handleSubmit}>
@@ -95,6 +136,8 @@ const Login = () => {
                 type="password"
                 placeholder="Password"
                 className="form-control"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 style={{
                   backgroundColor: "hsl(215, 25%, 12%)",
                   color: "hsl(210, 40%, 98%)",
