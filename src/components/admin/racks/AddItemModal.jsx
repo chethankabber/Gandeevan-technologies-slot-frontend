@@ -65,7 +65,7 @@ const AddItemModal = ({ show, onClose, onSubmit, slotNumber }) => {
   return (
     <Modal show={show} onHide={onClose} centered size="md">
       <Modal.Header closeButton>
-        <Modal.Title>Add Item to Slot {slotNumber}</Modal.Title>
+        <Modal.Title>Add Item to Slot {slotId}</Modal.Title>
       </Modal.Header>
 
       <Modal.Body>
