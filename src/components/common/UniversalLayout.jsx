@@ -1,30 +1,44 @@
-// src/components/common/UniversalLayout.jsx
 import React, { useState, useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
+import api from "../../api/axios";
 
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 
-import { mockAdmin, mockManager, mockUser } from "../../data/Mockdata";
-
 const UniversalLayout = ({ role }) => {
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    const fetchUser = async () => {
+      try {
+        const res = await api.get("/users/profile");
+        setCurrentUser(res.data.data);
+      } catch (error) {
+        console.error("Failed to load user", error);
+        localStorage.removeItem("token");
+        navigate("/login");
+      }
+    };
+
+    fetchUser();
+  }, [navigate]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 992);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  const getUserData = () => {
-    if (role === "admin") return mockAdmin;
-    if (role === "manager") return mockManager; 
-    if (role === "user")  return mockUser;
-    return null;
-  };
 
   return (
     <div
@@ -36,7 +50,11 @@ const UniversalLayout = ({ role }) => {
         overflow: "hidden",
       }}
     >
-      <Sidebar role={role} isOpen={sidebarOpen} onClose={toggleSidebar} />
+      <Sidebar
+        role={role}
+        isOpen={sidebarOpen}
+        onClose={toggleSidebar}
+      />
 
       <div
         className="d-flex flex-column flex-grow-1"
@@ -46,7 +64,12 @@ const UniversalLayout = ({ role }) => {
           width: "100%",
         }}
       >
-        <Navbar role={role} data={getUserData()} onMenuClick={toggleSidebar} isMobile={isMobile} />
+        <Navbar
+          role={role}
+          data={currentUser}
+          onMenuClick={toggleSidebar}
+          isMobile={isMobile}
+        />
 
         <main
           className="flex-grow-1 p-4"
@@ -55,7 +78,8 @@ const UniversalLayout = ({ role }) => {
             overflowY: "auto",
           }}
         >
-          <Outlet />
+          {/* ⬇ Pass both state and setter to children */}
+          <Outlet context={{ currentUser, setCurrentUser }} />
         </main>
       </div>
     </div>

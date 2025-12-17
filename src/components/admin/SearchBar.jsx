@@ -1,55 +1,47 @@
 import React, { useState, useMemo } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { Search } from "lucide-react";
 
-//containers → list of containers with slots + items
-//onFilterChange → parent wants to know filter changed
-//etSearchResult → used to show small “Jumped to Slot X” message
 const SearchBar = ({ containers = [], onFilterChange, setSearchResult }) => {
   const [term, setTerm] = useState("");
   const [filter, setFilter] = useState("All");
   const [showResults, setShowResults] = useState(false);
 
-  
-  // JUMP + SCROLL + HIGHLIGHT FUNCTION HERE //This creates the slot’s HTML id, example:rack-C1-slot-10
-
-  const jumpToSlot = (containerId, slotNumber) => {
-    const elementId = `rack-${containerId}-slot-${slotNumber}`;
+  // 🔥 Smooth Scroll + Highlight Slot
+  const jumpToSlot = (containerId, slotId) => {
+    const elementId = `rack-${containerId}-slot-${slotId}`;
     const el = document.getElementById(elementId);
 
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" }); //Smooth scrolling to the slot.
-
-      // highlight (flash yellow border)
-      el.style.transition = "box-shadow 0.4s ease";
-      el.style.boxShadow = "0 0 12px 5px black";
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.style.transition = "box-shadow 0.3s ease-in-out";
+      el.style.boxShadow = "0 0 12px 4px skyblue";
 
       setTimeout(() => {
         el.style.boxShadow = "none";
       }, 1500);
-
-      // setSearchResult?.(`Jumped to Rack ${containerId} • Slot ${slotNumber}`);
-      // setTimeout(() => setSearchResult?.(""), 1500);
     }
   };
-  // ---------------------------------------------
 
-  // SEARCH LOGIC — supports slot.items[]
+  // 🔍 Search Matching Items
   const matches = useMemo(() => {
     const q = term.trim().toLowerCase();
-    if (!q || q.length < 2) return [];   //Only search when user types 2+ letters
+    if (!q || q.length < 2) return [];
 
-    const out = [];                     //oop through all containers and their slots + items
+    const results = [];
+
     containers.forEach((container) => {
       container.slots.forEach((slot) => {
         if (!slot.items || slot.items.length === 0) return;
 
         slot.items.forEach((item) => {
-          if (item.name?.toLowerCase().includes(q)) {
-            out.push({
-              containerId: container.id,
-              containerName: container.name,
-              slotNumber: slot.slotNumber,
-              itemName: item.name,
+          const name = item.itemName?.toLowerCase() || "";
+          if (name.includes(q)) {
+            results.push({
+              containerId: container.id,          // 👍 matches UI structure
+              containerName: container.rackName || container.name,
+              slotId: slot.slotNumber,                // 👍 final correct reference
+              itemName: item.itemName,
               status: item.isReturnable ? "Returnable" : "Non-returnable",
             });
           }
@@ -57,24 +49,24 @@ const SearchBar = ({ containers = [], onFilterChange, setSearchResult }) => {
       });
     });
 
-    return out;
+    return results;
   }, [term, containers]);
 
-  const handleFilter = (value) => {               //When user changes filter dropdown
+  const handleFilter = (value) => {
     setFilter(value);
     onFilterChange?.(value);
     setSearchResult?.(`Filter: ${value}`);
     setTimeout(() => setSearchResult?.(""), 1000);
   };
 
-  const clear = () => {             //Reset search + filter
+  const clear = () => {
     setTerm("");
     setShowResults(false);
     setSearchResult?.("");
   };
 
-  const onResultClick = (containerId, slotNumber) => {      //When user clicks a search result /Jump to slot 
-    jumpToSlot(containerId, slotNumber);
+  const onResultClick = (containerId, slotId) => {
+    jumpToSlot(containerId, slotId);
     setShowResults(false);
   };
 
@@ -83,7 +75,7 @@ const SearchBar = ({ containers = [], onFilterChange, setSearchResult }) => {
       {/* Search + Filter */}
       <div className="d-flex gap-2 align-items-center flex-wrap">
         <div style={{ flex: 1 }}>
-          <input                                      //Whenever the user types → show results panel
+          <input
             value={term}
             onChange={(e) => {
               setTerm(e.target.value);
@@ -126,12 +118,12 @@ const SearchBar = ({ containers = [], onFilterChange, setSearchResult }) => {
           {matches.length === 0 ? (
             <div className="small text-muted px-2 py-1">No items found.</div>
           ) : (
-            matches.map((m, idx) => (                           //If matches exist → show clickable results
+            matches.map((m, idx) => (
               <button
-                key={`${m.containerId}-${m.slotNumber}-${idx}`}
+                key={`${m.containerId}-${m.slotId}-${idx}`}
                 type="button"
                 className="w-100 text-start border-0 rounded mb-2 p-3"
-                onClick={() => onResultClick(m.containerId, m.slotNumber)}
+                onClick={() => onResultClick(m.containerId, m.slotId)}
                 style={{
                   backgroundColor: "hsl(215, 25%, 16%)",
                   color: "hsl(210, 40%, 98%)",
@@ -139,15 +131,17 @@ const SearchBar = ({ containers = [], onFilterChange, setSearchResult }) => {
                   transition: "background-color 0.2s ease",
                 }}
                 onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = "hsl(215, 25%, 22%)")
+                  (e.currentTarget.style.backgroundColor =
+                    "hsl(215, 25%, 22%)")
                 }
                 onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = "hsl(215, 25%, 16%)")
+                  (e.currentTarget.style.backgroundColor =
+                    "hsl(215, 25%, 16%)")
                 }
               >
                 <div className="fw-semibold">{m.itemName}</div>
                 <div className="small text-secondary">
-                  {m.containerName} • Slot {m.slotNumber} • {m.status}
+                  {m.containerName} • Slot {m.slotId} • {m.status}
                 </div>
               </button>
             ))

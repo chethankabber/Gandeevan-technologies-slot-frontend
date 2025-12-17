@@ -1,7 +1,7 @@
 import axios from "axios";  //Axios is a library to make HTTP requests
 
 const api = axios.create({              //Create Axios instance
-  baseURL: "http://localhost:8000/api",
+  baseURL: "http://192.168.100.24:8000/api",  // localhost:8000
 });
 
 api.interceptors.request.use((config) => {     //An interceptor is a function that runs:Before every request is sent /Every request goes through here first.

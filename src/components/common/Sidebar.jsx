@@ -30,7 +30,7 @@ const navMenus = {
 
   user: [
     { title: "Dashboard", url: "/users/dashboard", icon: LayoutDashboard },
-    { title: "Racks", url: "/users/racks", icon: Package },
+    // { title: "Racks", url: "/users/racks", icon: Package },
     { title: "My History", url: "/users/history", icon: History },
     { title: "My Profile", url: "/users/profile", icon: UserCheck },
   ],
