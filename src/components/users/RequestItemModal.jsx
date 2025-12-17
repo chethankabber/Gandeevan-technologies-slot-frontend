@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
+import NotificationToast from "../common/NotificationToast";
 
 /**
  * Props:
@@ -16,6 +17,11 @@ const RequestItemModal = ({ show, onClose, onSubmit, currentUser = { name: "User
     returnDate: "",
     message: "",
   });
+  const [toast, setToast] = useState({
+  show: false,
+  message: "",
+  bg: "success",
+})
 
   useEffect(() => {
     if (!show) {
@@ -32,7 +38,11 @@ const RequestItemModal = ({ show, onClose, onSubmit, currentUser = { name: "User
 
   const submit = () => {
     if (!form.itemName.trim()) {
-      alert("Enter item name");
+       setToast({
+    show: true,
+    message: "Please enter item name",
+    bg: "danger",
+    });
       return;
     }
 
@@ -55,6 +65,11 @@ const RequestItemModal = ({ show, onClose, onSubmit, currentUser = { name: "User
   };
 
   return (
+    <>
+       <NotificationToast show={toast.show} message={toast.message} bg={toast.bg}  //Notification
+       onClose={() => setToast((prev) => ({ ...prev, show: false }))}/>
+
+
     <Modal show={show} onHide={onClose} centered>
       <Modal.Header closeButton>
         <Modal.Title>Request Item</Modal.Title>
@@ -104,6 +119,7 @@ const RequestItemModal = ({ show, onClose, onSubmit, currentUser = { name: "User
         <Button variant="primary" onClick={submit}>Send Request</Button>
       </Modal.Footer>
     </Modal>
+    </>
   );
 };
 

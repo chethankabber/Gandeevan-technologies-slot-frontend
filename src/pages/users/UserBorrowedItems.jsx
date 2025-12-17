@@ -1,66 +1,160 @@
 // src/pages/users/UserBorrowedItems.jsx
-import React from "react";
 
-/**
- * UserBorrowedItems (Option A Layout)
- * Shows only currently borrowed returnable items by the logged-in user.
- * Non-returnable items and already returned items are excluded.
- */
-const UserBorrowedItems = ({ borrowed = [] }) => {
+import React, { useEffect, useState } from "react";
+import api from "../../api/axios";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Calendar, Package } from "lucide-react";
+
+const UserBorrowedItems = () => {
+  const [borrowed, setBorrowed] = useState([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchBorrowedItems = async () => {
+      try {
+        const res = await api.get("/users/borrowed");
+
+        const formatted = res.data.data.map((item, index) => ({
+          id: index,
+          itemName: item.itemName,
+          project: item.project,
+          quantity: item.quantity,
+          takenDate: item.takenDate ? item.takenDate.split("T")[0] : "-",
+          returnDate:
+            item.returnDate && item.returnDate !== "-"
+              ? item.returnDate.split("T")[0]
+              : "N-R",
+          status: item.status,
+          daysLeft: item.daysLeft,
+          overdueDays: item.overdueDays,
+        }));
+
+        setBorrowed(formatted);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load borrowed items");
+      }
+    };
+
+    fetchBorrowedItems();
+  }, []);
+
   return (
-    <div className="container my-2">
-      <h4 className="fw-bold mb-3">My Borrowed Items</h4>
+    <div className="container my-4 border border-secondary">
+      {/* Header */}
+      <div className="mb-4">
+        <h2 className="fw-bold mb-1">Borrowed Items</h2>
+        <p style={{ color: "hsl(215,15%,75%)" }}>Items you must return</p>
+      </div>
 
-      <div
-        className="card p-3"
-        style={{
-          background: "hsl(215,25%,12%)",
-          border: "1px solid hsl(215,20%,25%)",
-          color: "white",
-        }}
-      >
-        {borrowed.length === 0 ? (
-          <p className="text-muted mb-0">You have no active borrowed items.</p>
-        ) : (
-          borrowed.map((item, index) => {
-            return (
-              <div
-                key={index}
-                className="p-3 mb-3 rounded"
-                style={{
-                  background: "hsl(215,25%,16%)",
-                  border: "1px solid hsl(215,20%,25%)",
-                }}
-              >
-                <div className="d-flex justify-content-between">
-                  <div>
-                    <div className="fw-bold">Item: {item.itemName}</div>
-                    <div className="text-muted small">
-                      Return Date: {item.returnDate}
-                    </div>
-                  </div>
-
-                  <div className="text-end">
-                    <div className="fw-bold">Days Left: {item.daysLeft}</div>
-                    <span
-                      className="badge"
-                      style={{
-                        background:
-                          item.daysLeft > 0
-                            ? "hsl(140,40%,30%)" // green
-                            : "hsl(0,70%,40%)", // red
-                        padding: "6px 10px",
-                        borderRadius: 6,
-                      }}
-                    >
-                      {item.daysLeft > 0 ? "On Time" : "Overdue"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })
+      {/* Borrowed Items List */}
+      <div className="d-flex flex-column gap-3">
+        {borrowed.length === 0 && !error && (
+          <p className="text-center" style={{ color: "gray" }}>
+            No active borrowed items.
+          </p>
         )}
+
+        {error && (
+          <p className="text-danger text-center">{error}</p>
+        )}
+
+        {borrowed.map((item) => (
+          <div
+            key={item.id}
+            className="card p-3"
+            style={{
+              background:
+                "linear-gradient(90deg, hsl(215,25%,12%) 0%, hsl(215,25%,10%) 100%)",
+              border: "2px solid hsl(215, 20%, 30%)",
+              borderRadius: "12px",
+              padding: "20px",
+              transition: "0.25s",
+              color: "white",
+              boxShadow: "0 0 10px rgba(63,124,255,0.15)",
+            }}
+            // onMouseEnter={(e) => {
+            //   e.currentTarget.style.border =
+            //     "2px solid hsl(215, 80%, 70%)";
+            //   e.currentTarget.style.boxShadow =
+            //     "0 0 12px rgba(63,124,255,0.45)";
+            // }}
+            // onMouseLeave={(e) => {
+            //   e.currentTarget.style.border =
+            //     "2px solid hsl(215, 20%, 30%)";
+            //   e.currentTarget.style.boxShadow =
+            //     "0 0 10px rgba(63,124,255,0.15)";
+            // }}
+          >
+            <div className="d-flex justify-content-between">
+              {/* LEFT */}
+              <div>
+                <h5 className="fw-bol mb-1">
+                  <Package size={16} className="me-1 text-primary" />
+                  {item.itemName}
+                </h5> 
+                <h6 className=" mb-1">
+                  Project : {item.project}
+                </h6>
+                <h6 className=" mb-1">
+                  Qty : {item.quantity}
+                </h6>
+
+                {/* <small
+                  className="d-flex align-items-center gap-2"
+                  style={{ color: "hsl(215,15%,70%)" }}
+                >
+                  <Calendar size={14} /> Taken Date: {item.takenDate}
+                </small>
+
+                <small
+                  className="d-flex align-items-center gap-2"
+                  style={{ color: "hsl(215,15%,70%)" }}
+                >
+                  <Calendar size={14} /> Return Date:{" "}
+                  {item.returnDate !== "-" ? item.returnDate : "Non-Returnable"}
+                </small> */}
+              </div>
+
+              {/* RIGHT STATUS */}
+              <div className="text-end fw-bold">
+                {item.overdueDays !== null && item.overdueDays > 0 ? (
+                  <span style={{ color: "#ff4d4d" }}>
+                    Overdue by {item.overdueDays} days
+                  </span>
+                ) : item.daysLeft !== null ? (
+                  <span style={{ color: "#90ee90" }}>
+                    {item.daysLeft} Days Left
+                  </span>
+                ) : (
+                  <span style={{ color: "gray" }}>-</span>
+                )}
+
+                {item.status === "non-returnable" && (
+                  <div className="badge bg-info mt-2">
+                    Non-Returnable
+                  </div>
+                )} 
+                   <div>
+                    <small
+                  className="d-flex align-items-center gap-2"
+                  style={{ color: "hsl(215,15%,70%)" }}
+                >
+                  <Calendar size={14} /> Taken Date: {item.takenDate}
+                </small>
+
+                <small
+                  className="d-flex align-items-center gap-2"
+                  style={{ color: "hsl(215,15%,70%)" }}
+                >
+                  <Calendar size={14} /> Return Date:{" "}
+                  {item.returnDate !== "-" ? item.returnDate : "N-R"}
+                </small>
+                  </div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

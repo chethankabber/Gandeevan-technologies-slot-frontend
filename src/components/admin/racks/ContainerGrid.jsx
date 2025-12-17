@@ -198,6 +198,7 @@
 import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import api from "../../../api/axios";
+import { Package, Trash2 } from "lucide-react";
 
 import SlotCard from "./SlotCard";
 import SlotDetailModal from "./SlotDetailModal";
@@ -345,9 +346,10 @@ const handleSlotClick = async (slotId) => {
         className="card shadow-sm my-3"
         style={{
           background:
-            "linear-gradient(90deg, hsl(215, 25%, 12%) 0%, hsl(215, 25%, 10%) 100%)",
+            "linear-gradient(90deg, hsla(219, 9%, 55%, 1.00) 0%, hsl(215, 25%, 10%) 100%)",
           color: "white",
           borderRadius: "10px",
+          
         }}
       >
         <div className="card-header d-flex justify-content-between">
@@ -356,7 +358,7 @@ const handleSlotClick = async (slotId) => {
           <div className="d-flex gap-2">
             {/* ADD SLOT */}
             <button
-              className="btn btn-sm btn-outline-light"
+              className="btn btn-sm btn-primary "
               onClick={() => onAddSlot(container.id)}
             >
               + Slot
@@ -364,10 +366,10 @@ const handleSlotClick = async (slotId) => {
 
             {/* DELETE RACK */}
             <button
-              className="btn btn-sm btn-secondary"
+              className="btn btn-sm btn-primary"
               onClick={() => setShowDeleteRackModal(true)}
             >
-              🗑
+              <Trash2 size={16}/> Rack
             </button>
           </div>
         </div>
@@ -445,8 +447,8 @@ const handleSlotClick = async (slotId) => {
       {/* CONFIRM DELETE SLOT */}
       <DeleteConfirmModal
         show={showDeleteSlotModal}
-        title="Delete Slot?"
-        message={`Delete slot ${slotToDelete}? All items inside will be removed.`}
+        title="Delete Slot ?"
+        message={`Delete ${slotToDelete} ? All items inside will be removed.`}
         onConfirm={confirmDeleteSlot}
         onCancel={() => setShowDeleteSlotModal(false)}
       />

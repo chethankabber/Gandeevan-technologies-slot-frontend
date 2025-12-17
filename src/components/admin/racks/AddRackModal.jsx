@@ -37,7 +37,7 @@ const AddRackModal = ({ show, onClose, reload }) => {
       // Close after short delay so toast is visible
       setTimeout(() => {
         onClose();
-        
+         if (reload) reload();  //Today
       }, 700);
     
     } catch (err) {

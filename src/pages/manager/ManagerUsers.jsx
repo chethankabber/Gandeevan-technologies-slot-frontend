@@ -1,32 +1,21 @@
-// src/pages/manager/ManagerUsers.jsx
-import React from "react";
-import {
-  mockAdmin,
-  mockManager,
-  mockUsers, // 👈 add this
-} from "../../data/Mockdata";
+import React, { useEffect, useState } from "react";
+import api from "../../api/axios";
 
 const ManagerUsers = () => {
-  // Admin user
-  const adminUser = {
-    id: "admin",
-    name: mockAdmin.name,
-    email: mockAdmin.email,
-    phone: "9876000000",
-    role: "Admin",
+  const [users, setUsers] = useState([]);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await api.get("/manager/users");
+      setUsers(res.data.data);
+    } catch (error) {
+      console.error("Failed to fetch users", error);
+    }
   };
 
-  // Manager user
-  const managerUser = {
-    id: "manager",
-    name: mockManager.name,
-    email: mockManager.email,
-    phone: "9876111111",
-    role: "Manager",
-  };
-
-  // Combine all users
-  const allUsers = [adminUser, managerUser, ...mockUsers];
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   return (
     <div className="container my-4">
@@ -40,30 +29,33 @@ const ManagerUsers = () => {
           color: "white",
         }}
       >
-        
-
-        <table className="table-bordered mb-0" style={{ width: "100%", backgroundColor: "#202830ff" }}>
-          <thead style={{
-                background: "hsl(215,25%,18%)",
-                position: "sticky",
-                top: 0,
-                zIndex: 10,
-              }}>
-            <tr  >
+        <table
+          className="table-bordered mb-0"
+          style={{ width: "100%", backgroundColor: "#202830ff" }}
+        >
+          <thead
+            style={{
+              background: "hsl(215,25%,18%)",
+              position: "sticky",
+              top: 0,
+              zIndex: 10,
+            }}
+          >
+            <tr>
               <th style={{ padding: "14px" }}>Name</th>
               <th style={{ padding: "14px" }}>Role</th>
               <th style={{ padding: "14px" }}>Email</th>
-              {/* <th style={{ padding: "14px" }}>Phone</th> */}
             </tr>
           </thead>
 
           <tbody>
-            {allUsers.map((u) => (
-              <tr key={u.id} >
+            {users.map((u) => (
+              <tr key={u._id}>
                 <td style={{ padding: "17px" }}>{u.name}</td>
-                <td style={{ padding: "17px" }}>{u.role}</td>
+                <td style={{ padding: "17px", textTransform: "capitalize" }}>
+                  {u.role}
+                </td>
                 <td style={{ padding: "17px" }}>{u.email}</td>
-                {/* <td style={{ padding: "17px" }}>{u.phone}</td> */}
               </tr>
             ))}
           </tbody>

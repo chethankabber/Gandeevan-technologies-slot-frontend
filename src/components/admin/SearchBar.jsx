@@ -7,7 +7,7 @@ const SearchBar = ({ containers = [], onFilterChange, setSearchResult }) => {
   const [filter, setFilter] = useState("All");
   const [showResults, setShowResults] = useState(false);
 
-  // 🔥 Smooth Scroll + Highlight Slot
+  // Smooth Scroll + Highlight Slot
   const jumpToSlot = (containerId, slotId) => {
     const elementId = `rack-${containerId}-slot-${slotId}`;
     const el = document.getElementById(elementId);
@@ -23,7 +23,7 @@ const SearchBar = ({ containers = [], onFilterChange, setSearchResult }) => {
     }
   };
 
-  // 🔍 Search Matching Items
+  //  Search Matching Items
   const matches = useMemo(() => {
     const q = term.trim().toLowerCase();
     if (!q || q.length < 2) return [];
@@ -40,7 +40,7 @@ const SearchBar = ({ containers = [], onFilterChange, setSearchResult }) => {
             results.push({
               containerId: container.id,          // 👍 matches UI structure
               containerName: container.rackName || container.name,
-              slotId: slot.slotNumber,                // 👍 final correct reference
+              slotId: slot.slotId,                // 👍 final correct reference
               itemName: item.itemName,
               status: item.isReturnable ? "Returnable" : "Non-returnable",
             });
@@ -93,8 +93,8 @@ const SearchBar = ({ containers = [], onFilterChange, setSearchResult }) => {
             onChange={(e) => handleFilter(e.target.value)}
           >
             <option value="All">All</option>
-            <option value="Returnable">Returnable</option>
-            <option value="Non-returnable">Non-returnable</option>
+            {/* <option value="Returnable">Returnable</option>
+            <option value="Non-returnable">Non-returnable</option> */}
             <option value="Occupied">Occupied</option>
             <option value="Empty">Empty</option>
           </select>
@@ -141,7 +141,7 @@ const SearchBar = ({ containers = [], onFilterChange, setSearchResult }) => {
               >
                 <div className="fw-semibold">{m.itemName}</div>
                 <div className="small text-secondary">
-                  {m.containerName} • Slot {m.slotId} • {m.status}
+                  • {m.containerName} • {m.slotId.replace('slot_', 'Slot ')} 
                 </div>
               </button>
             ))

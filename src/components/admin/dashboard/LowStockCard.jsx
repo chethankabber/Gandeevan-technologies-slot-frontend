@@ -1,33 +1,7 @@
-// components/admin/dashboard/LowStockCard.jsx
 import React from "react";
+import { Package } from "lucide-react";
 
-const LowStockCard = ({ containers = [], onJumpToSlot }) => {
-  const lowItems = [];
-
-  // Build list of low-stock items
-  containers.forEach((rack) => {
-    rack.slots.forEach((slot) => {
-      (slot.items || []).forEach((item) => {
-        const totalTaken = (item.taken || []).reduce(
-          (sum, t) => sum + Number(t.qty || 0),
-          0
-        );
-
-        const remaining = Number(item.quantity || 0) - totalTaken;
-
-        if (remaining < 6) {
-          lowItems.push({
-            itemName: item.name,
-            remaining,
-            rackName: rack.name,
-            slotNumber: slot.slotNumber,
-            containerId: rack.id,
-          });
-        }
-      });
-    });
-  });
-
+const LowStockCard = ({ lowStock = [], onJumpToSlot }) => {
   return (
     <div
       className="card shadow-sm"
@@ -48,10 +22,10 @@ const LowStockCard = ({ containers = [], onJumpToSlot }) => {
           paddingRight: "6px",
         }}
       >
-        {lowItems.length === 0 ? (
+        {lowStock.length === 0 ? (
           <p className="text-muted">No low-stock items.</p>
         ) : (
-          lowItems.map((it, idx) => (
+          lowStock.map((it, idx) => (
             <div
               key={idx}
               className="d-flex justify-content-between align-items-center p-3 mb-3 rounded"
@@ -60,26 +34,26 @@ const LowStockCard = ({ containers = [], onJumpToSlot }) => {
                 border: "1px solid hsl(215, 20%, 25%)",
               }}
             >
-              <div style={{ flex: 1 }}>
-                <div className="fw-semibold">{it.itemName}</div>
+              <div style={{ flex: 1 }}> 
+                <div className="fw-semibold"> 
+                 ItemName : {it.itemName}</div>
 
                 <div className="text-muted small">
-                  Remaining: <strong className="text-white">{it.remaining}</strong>
+                  Remaining:{" "}
+                  <strong className="text-white">{it.remaining}</strong>
                 </div>
-
-                <div className="text-muted small">
-                  {it.rackName} • Slot {it.slotNumber}
+                {/* <Package size={18} className="text-primary p-2"/>  */}
+                <div className="text-muted small"> 
+                  • {it.rackName} • Slot {it.slotNumber}
                 </div>
               </div>
 
-              {/* MOVE BUTTON */}
               <button
-                   className="btn btn-secondary btn-sm ms-3"
-                     onClick={() => onJumpToSlot(it.containerId, it.slotNumber)}
-                     >
-                         Move >>
-                 </button>
-
+                className="btn btn-secondary btn-sm ms-3"
+                onClick={() => onJumpToSlot(it.rackId, it.slotId)}
+              >
+                Move >>
+              </button>
             </div>
           ))
         )}

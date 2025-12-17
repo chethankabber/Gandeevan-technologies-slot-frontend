@@ -1,79 +1,58 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Search, Calendar, User } from "lucide-react";
+import api from "../api/axios";
+
 
 const History = () => {
+  const [historyData, setHistoryData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
 
-  // Example history data
-  const historyData = [
-    {
-      id: 1,
-      action: "New User Added",
-      details: "Alice was added as a new user.",
-      user: "Admin",
-      date: "2025-01-10",
-    },
-    {
-      id: 2,
-      action: "Item Taken",
-      details: "Hammer taken by Bob.",
-      user: "Bob",
-      date: "2025-01-11",
-    },
-    {
-      id: 3,
-      action: "Item Added",
-      details: "Wrench added to Container A.",
-      user: "Admin",
-      date: "2025-01-12",
-    },
-    {
-      id: 4,
-      action: "Item Returned",
-      details: "Bob returned the Hammer.",
-      user: "Bob",
-      date: "2025-01-13",
-    },
-    {
-      id: 5,
-      action: "Item Taken",
-      details: "Charlie took Screwdriver.",
-      user: "Charlie",
-      date: "2025-01-14",
-    },
-    {
-      id: 6,
-      action: "New User Added",
-      details: "David was added as a new user.",
-      user: "Admin",
-      date: "2025-01-15",
-    },
-  ];
+  // Fetch history data from backend
+  const fetchHistory = async () => {
+    try {
+      const res = await api.get("/manager/history");
+      setHistoryData(res.data.data);
+    } catch (error) {
+      console.error("Failed to fetch history:", error);
+    }
+  };
 
-  // ✅ Filter logic (by search term and filter type)
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  // Filter logic
   const filteredHistory = historyData.filter((item) => {
-    const matchesSearch =
-      item.details.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.user.toLowerCase().includes(searchTerm.toLowerCase());
+  const searchKey = searchTerm.toLowerCase();
 
-    const matchesType =
-      filterType === "all" || item.action.toLowerCase() === filterType.toLowerCase();
+  const createdByName = item.createdByName?.toLowerCase() || "";
+  const createdByEmail = item.createdByEmail?.toLowerCase() || "";
 
-    return matchesSearch && matchesType;
-  });
+  const matchesSearch =
+    item.title?.toLowerCase().includes(searchKey) ||
+    item.description?.toLowerCase().includes(searchKey) ||
+    createdByName.includes(searchKey) ||
+    createdByEmail.includes(searchKey);
+
+  const matchesType =
+    filterType === "all" ||
+    item.title.toLowerCase().includes(filterType.toLowerCase());
+
+  return matchesSearch && matchesType;
+});
 
   return (
     <div className="container my-4">
-      {/* Page Header */}
       <div className="mb-4">
         <h2 className="fw-bold mb-1">History</h2>
         <p className="text-muted">View all recent activities and actions</p>
       </div>
 
       {/* Search + Filter Bar */}
-      <div className="card mb-4 p-3"
+      <div
+        className="card mb-4 p-3"
         style={{
           background:
             "linear-gradient(90deg, hsl(215, 25%, 12%) 0%, hsl(215, 25%, 10%) 100%)",
@@ -87,7 +66,7 @@ const History = () => {
             <input
               type="text"
               className="form-control"
-              placeholder="Search by name or item..."
+              placeholder="Search by item or person..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -100,10 +79,14 @@ const History = () => {
               onChange={(e) => setFilterType(e.target.value)}
             >
               <option value="all">All Actions</option>
-              <option value="new user added">New User Added</option>
-              <option value="item taken">Item Taken</option>
               <option value="item added">Item Added</option>
+              <option value="Slot Added">Slot Added</option>
+              <option value="Item Issued">Item Issued</option>
               <option value="item returned">Item Returned</option>
+              <option value="Rack Deleted">Rack Deleted</option>
+              <option value="Slot Deleted">Slot Deleted</option>
+              <option value="user added">New User Added</option>
+              
             </select>
           </div>
         </div>
@@ -114,7 +97,7 @@ const History = () => {
         {filteredHistory.length > 0 ? (
           filteredHistory.map((item) => (
             <div
-              key={item.id}
+              key={item._id}
               className="card p-3 shadow-sm"
               style={{
                 background:
@@ -125,13 +108,16 @@ const History = () => {
             >
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <h6 className="fw-bold mb-1">{item.action}</h6>
-                  <p className="text-muted small mb-1">{item.details}</p>
+                  <h6 className="fw-bold mb-1">{item.title}</h6>
+                  <p className="text-muted small mb-1">{item.description}</p>
                   <div className="d-flex align-items-center text-muted small gap-2">
                     <User size={14} />
-                    <span>{item.user}</span>
+                    <span className="text-white">{item.createdByName || item.createdByEmail}</span>
+                    <span className="badge  ">
+                         {item.createdByRole}
+                    </span>
                     <Calendar size={14} className="ms-3" />
-                    <span>{item.date}</span>
+                    <span>{new Date(item.date).toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>

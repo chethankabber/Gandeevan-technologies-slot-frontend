@@ -106,7 +106,7 @@ const Containers = () => {
     try {
       await api.post(`/racks/addSlot/${rackId}`);
       fetchRacks();
-
+      
       setToast({
         show: true,
         message: "Slot added successfully!",
@@ -127,7 +127,7 @@ const Containers = () => {
     try {
       await api.delete(`/racks/deleteSlot/${rackId}/${slotId}`);
       fetchRacks();
-
+      // onRefresh(); //Today
       setToast({
         show: true,
         message: "Slot deleted!",
@@ -148,6 +148,7 @@ const Containers = () => {
     try {
       await api.delete(`/racks/deleteRack/${rackId}`);
       fetchRacks();
+      // fetchRacks();
 
       setToast({
         show: true,
@@ -178,7 +179,7 @@ const Containers = () => {
           <p className="text-muted">Manage all racks and items</p>
         </div>
 
-        <button className="btn btn-secondary" onClick={() => setShowRackModal(true)}>
+        <button className="btn btn-primary" onClick={() => setShowRackModal(true)}>
           + Add Rack
         </button>
       </div>
@@ -213,6 +214,7 @@ const Containers = () => {
         onCreate={(rackName, slotsCount) =>
           handleCreateRack(rackName, slotsCount)
         }
+        reload={fetchRacks} 
       />
 
       <NotificationToast

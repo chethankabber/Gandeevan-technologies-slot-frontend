@@ -1,48 +1,45 @@
-import React, { useState } from "react";
+// src/pages/users/UserHistory.jsx
+import React, { useEffect, useState } from "react";
+import api from "../../api/axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Search, Calendar, Package } from "lucide-react";
 
 const UserHistory = () => {
+  const [history, setHistory] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const [error, setError] = useState("");
 
-  // ---------------------- DUMMY USER HISTORY ----------------------
-  const userHistory = [
-    {
-      id: 1,
-      item: "MacBook Air",
-      qty: 1,
-      project: "Slot Management",
-      returnable: true,
-      takenDate: "2025-01-10",
-      returnedDate: "2025-01-14",
-      status: "Returned",
-    },
-    {
-      id: 2,
-      item: "Surface Pro",
-      qty: 1,
-      project: "Management",
-      returnable: true,
-      takenDate: "2025-02-02",
-      returnedDate: null,
-      status: "Not Returned",
-    },
-    {
-      id: 3,
-      item: "HDMI Cable",
-      qty: 2,
-      project: "Development",
-      returnable: false,
-      takenDate: "2025-01-20",
-      returnedDate: "-",
-      status: "Non-Returnable",
-    },
-    
-  ];
+  // Fetch user history from backend
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const response = await api.get("/users/history");
+        const formatted = response.data.data.map((h, index) => ({
+          id: index,
+          item: h.itemName,
+          qty: h.quantity,
+          project: h.project,
+          takenDate: h.takenDate.split("T")[0],
+          returnedDate: h.returnDate !== "-" ? h.returnDate.split("T")[0] : "-",
+          status:
+            h.status === "not-returned"
+              ? "Not Returned"
+              : h.status === "returned"
+              ? "Returned"
+              : "Non-Returnable",
+        }));
+        setHistory(formatted);
+      } catch (err) {
+        setError("Failed to load history");
+      }
+    };
 
-  // ---------------------- FILTER LOGIC ----------------------
-  const filtered = userHistory.filter((h) => {
+    fetchHistory();
+  }, []);
+
+  // Filter logic
+  const filtered = history.filter((h) => {
     const search =
       h.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
       h.project.toLowerCase().includes(searchTerm.toLowerCase());
@@ -59,7 +56,7 @@ const UserHistory = () => {
       {/* Header */}
       <div className="mb-4">
         <h2 className="fw-bold mb-1">My History</h2>
-        <p className="text-muted">All items you borrowed earlier</p>
+        <p className="text-muted">Items you have borrowed from racks</p>
       </div>
 
       {/* Search + Filter */}
@@ -119,16 +116,18 @@ const UserHistory = () => {
                 {/* Left side */}
                 <div>
                   <h6 className="fw-bold mb-1">
-                    <Package size={16} className="me-1" />
-                    {h.item}
+                    <Package size={16} className="me-1" /> {h.item}
                   </h6>
 
-                  <p className="text-muted small mb-1">Project: {h.project}</p>
+                  <p className="text-muted small mb-1">
+                    Project: {h.project}
+                  </p>
 
                   <div className="text-muted small d-flex align-items-center gap-2">
-                    <Calendar size={14} /> Taken: {h.takenDate}
-                    <Calendar size={14} className="ms-3" /> Returned:{" "}
-                    {h.returnedDate || "Not Returned"}
+                    <Calendar size={14} /> Taken Date: {h.takenDate}
+                    <Calendar size={14} className="ms-3" />
+                    Return Date:{" "}
+                    {h.returnedDate !== "-" ? h.returnedDate : "Not Returned"}
                   </div>
                 </div>
 
@@ -148,7 +147,9 @@ const UserHistory = () => {
             </div>
           ))
         ) : (
-          <div className="text-muted text-center mt-4">No records found.</div>
+          <div className="text-muted text-center mt-4">
+            {error || "No records found."}
+          </div>
         )}
       </div>
     </div>

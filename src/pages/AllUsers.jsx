@@ -1,6 +1,8 @@
-// AllUsers.jsx
+// src/pages/AllUsers.jsx
 import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import api from "../api/axios";
+import NotificationToast from "../components/common/NotificationToast";
 import {
   User,
   Mail,
@@ -13,14 +15,12 @@ import {
 } from "lucide-react";
 
 const generatePassword = (length = 12) => {
-  // Ensure at least one char from each group to make a strong password
   const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const lower = "abcdefghijklmnopqrstuvwxyz";
   const digits = "0123456789";
   const symbols = "!@#$%&*()_=+[]{}?";
   const all = upper + lower + digits + symbols;
 
-  // pick at least one from each set
   let pwd = [
     upper[Math.floor(Math.random() * upper.length)],
     lower[Math.floor(Math.random() * lower.length)],
@@ -31,25 +31,25 @@ const generatePassword = (length = 12) => {
   for (let i = pwd.length; i < length; i++) {
     pwd.push(all[Math.floor(Math.random() * all.length)]);
   }
-
-  // shuffle
-  for (let i = pwd.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pwd[i], pwd[j]] = [pwd[j], pwd[i]];
-  }
-  return pwd.join("");
+  return pwd.sort(() => Math.random() - 0.5).join("");
 };
 
 const AllUsers = () => {
   const [users, setUsers] = useState([]);
-  const [currentUserRole] = useState("Admin"); // assume admin for demo
 
-  // Modal & form state
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // NEW: Edit mode
-  const [editMode, setEditMode] = useState(false); // to toggle Add/Edit
-  const [editUserId, setEditUserId] = useState(null); // store which user is being edited
+  const [editMode, setEditMode] = useState(false);
+  const [editUserId, setEditUserId] = useState(null);
+  const [deleteUserId, setDeleteUserId] = useState(null);
+  const [deleteUserName, setDeleteUserName] = useState(""); 
+  const [toast, setToast] = useState({
+        show: false,
+        message: "",
+        bg: "success",
+  });
+
 
   const [form, setForm] = useState({
     name: "",
@@ -61,55 +61,37 @@ const AllUsers = () => {
   const [generatedPassword, setGeneratedPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const [alert, setAlert] = useState(null);
 
-  // Load from localStorage on mount
+  // ================= LOAD USERS =================
   useEffect(() => {
-    const saved = localStorage.getItem("allUsers_demo");
-    if (saved) setUsers(JSON.parse(saved));
-    else {
-      // initial data
-      setUsers([
-        {
-          id: 1,
-          name: "Alice",
-          email: "alice@example.com",
-          role: "Manager",
-          phone: "9876543210",
-          joinDate: "2025-01-10",
-        },
-        {
-          id: 2,
-          name: "Bob",
-          email: "bob@example.com",
-          role: "User",
-          phone: "9123456780",
-          joinDate: "2025-01-11",
-        },
-      ]);
-    }
+    const fetchUsers = async () => {
+      try {
+        const response = await api.get("/admin/getAllUsers");
+
+        const formattedUsers = response.data.data.map((u) => ({
+          ...u,
+          joinDate: u.joined ? u.joined.split("T")[0] : "-",
+        }));
+
+        setUsers(formattedUsers);
+      } catch (error) {
+        console.log("fetchUsers err:",error )
+        setToast({ show: true, message: "Failed to load users", bg: "danger",});
+      }
+    };
+
+    fetchUsers();
   }, []);
 
-  // persist on change
-  //This runs every time the users array changes.
-  //Converts the users array to a string using JSON.stringify // Saves it inside browser local storage
-  useEffect(() => {
-    localStorage.setItem("allUsers_demo", JSON.stringify(users));
-  }, [users]);
-
-  // Basic validators
   const validate = () => {
-    const e = {}; //store all errors inside this.
-    if (!form.name.trim()) e.name = "Name is required";
-    if (!form.email.trim()) e.email = "Email is required";
-    else if (!/^\S+@\S+\.\S+$/.test(form.email)) e.email = "Invalid email";
-    if (!form.phone.trim()) e.phone = "Phone is required";
-    else if (!/^\d{7,15}$/.test(form.phone.replace(/\s+/g, "")))
-      e.phone = "Phone must be 7–15 digits";
+    const e = {};
+    if (!form.name.trim()) e.name = "Name required";
+    if (!form.email.trim()) e.email = "Email required";
+    if (!/^\S+@\S+\.\S+$/.test(form.email)) e.email = "Invalid email";
+    if (!form.phone.trim()) e.phone = "Phone required";
     return e;
   };
 
-  //form becomes clean again.
   const resetForm = () => {
     setForm({ name: "", email: "", role: "User", phone: "" });
     setGeneratedPassword("");
@@ -117,404 +99,282 @@ const AllUsers = () => {
     setErrors({});
   };
 
-  // open edit modal
-  const openEditModal = (user) => {
-    setEditMode(true);
-    setEditUserId(user.id);
-
-    // Pre-fill form with existing data
-    setForm({
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phone: user.phone,
-    });
-
-    // password not shown until regenerated
-    setGeneratedPassword("");
-
-    setShowModal(true);
-  };
-
-  // Add OR Edit user
-  const handleAddUser = (ev) => {
+  // ================ ADD / EDIT USER =================
+  const handleUserSubmit = async (ev) => {
     ev.preventDefault();
     const e = validate();
-    if (Object.keys(e).length > 0) {
-      setErrors(e);
+    if (Object.keys(e).length > 0) return setErrors(e);
+
+    const convertedRole = form.role.toLowerCase();
+
+    try {
+      if (editMode) {
+        await api.put(`/admin/editUser/${editUserId}`, {
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          role: convertedRole,
+        });
+
+        setUsers((prev) =>
+          prev.map((u) =>
+            u._id === editUserId
+              ? { ...u, name: form.name, email: form.email, phone: form.phone, role: convertedRole }
+              : u
+          )
+        );
+        setToast({ show: true, message: "User updated ✔", bg: "success",});
+
+      } else {
+        const response = await api.post("/admin/addUser", {
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          password: generatedPassword || generatePassword(),
+          role: convertedRole,
+        });
+
+        const newUser = {
+          ...response.data.data,
+          joinDate: response.data.data.joined.split("T")[0],
+        };
+
+        setUsers((prev) => [newUser, ...prev]);
+        setToast({ show: true, message: "User added ✔", bg: "success",});
+
+      }
+    } catch (err) {
+      setToast({
+          show: true,
+          message: err.response?.data?.message || "Action failed",
+          bg: "danger",
+      });
       return;
-    }
-
-    // check duplicate email (except editing same user)
-    if (
-      users.some(
-        (u) => u.email.toLowerCase() === form.email.toLowerCase() && u.id !== editUserId
-      )
-    ) {
-      setErrors({ email: "Email already used" });
-      return;
-    }
-
-    if (editMode) {
-      
-      //  EDIT USER MODE
-      
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === editUserId
-            ? {
-                ...u,
-                name: form.name,
-                email: form.email,
-                role: form.role,
-                phone: form.phone,
-                password: generatedPassword || u.password, // Update password only if new generated
-              }
-            : u
-        )
-      );
-
-      setAlert({ type: "success", message: "User updated successfully" });
-    } else {
-      
-      // ADD NEW USER MODE
-      
-      const newUser = {
-        id: Date.now(),
-        name: form.name.trim(),
-        email: form.email.trim(),
-        role: form.role,
-        phone: form.phone.trim(),
-        joinDate: new Date().toISOString().slice(0, 10),
-        // NOTE: storing passwords in client state is for demo only
-        password: generatedPassword || generatePassword(12),
-      };
-
-      //So the newest user appears first on UI.
-      setUsers((prev) => [newUser, ...prev]);
-      setAlert({ type: "success", message: `User "${newUser.name}" added` });
     }
 
     resetForm();
-    setShowModal(false);
     setEditMode(false);
-    setEditUserId(null);
+    setShowModal(false);
 
-    setTimeout(() => setAlert(null), 3000);
+
   };
 
-  const handleRemove = (id) => {
-    //window.confirm() shows a browser popup with OK / Cancel.
-    if (!window.confirm("Are you sure you want to remove this user?")) return;
-    setUsers((prev) => prev.filter((u) => u.id !== id)); //Thus the selected user is deleted.
+  // ================ DELETE USER =================
+  const confirmDelete = (id, name) => {
+    setDeleteUserId(id);
+    setDeleteUserName(name);
+    setShowDeleteModal(true);
   };
 
-  const handleGenerate = (len = 12) => {
-    //calls the generatePassword function to create a new password. Returns a string like "Gt9@fK12#Ld!"
-    const pw = generatePassword(len);
-    setGeneratedPassword(pw);
-    setShowPassword(true);
-  };
-
-  const handleCopyPassword = async () => {
+  const handleDeleteUser = async () => {
     try {
-      await navigator.clipboard.writeText(generatedPassword); //This copies the generated password to the clipboard.
-      setAlert({ type: "success", message: "Password copied to clipboard" });
-      setTimeout(() => setAlert(null), 2000); //Shows green success message. Auto hides after 2 seconds
+      await api.delete(`/admin/deleteUser/${deleteUserId}`);
+      setUsers((prev) => prev.filter((u) => u._id !== deleteUserId));
+      setToast({ show: true, message: "User removed!",bg: "success",});
+
     } catch {
-      setAlert({
-        type: "danger",
-        message: "Copy failed (browser blocked clipboard)",
-      });
-      setTimeout(() => setAlert(null), 2000);
+      setToast({ show: true, message: "Delete failed ", bg: "danger",});
     }
+    setShowDeleteModal(false);
   };
 
   return (
     <div className="container my-4">
-      {/* Header */}
-      <div className="d-flex justify-content-between align-items-start mb-4 flex-column flex-md-row gap-3">
+      <NotificationToast show={toast.show} message={toast.message} bg={toast.bg}
+           onClose={() => setToast((prev) => ({ ...prev, show: false }))}/>
+      {/* HEADER */}
+      <div className="d-flex justify-content-between align-items-start mb-4">
         <div>
-          <h2 className="fw-bold mb-1">All Users</h2>
-          <p className="text-muted mb-0">
-            View all registered users and manage access permissions
-          </p>
+          <h2>All Users</h2>
+          <p className="text-muted mb-0">Manage user permissions</p>
         </div>
 
         <div className="d-flex gap-2 align-items-center">
-          {alert && (
-            <div
-              className={`alert alert-${alert.type} py-2 mb-0`}
-              role="alert"
-              style={{ minWidth: 200 }}
-            >
-              {alert.message}
-            </div>
-          )}
-          {currentUserRole === "Admin" && (
-            <button
-              className="btn btn-primary d-flex align-items-center"
-              onClick={() => {
-                resetForm();
-                setEditMode(false); // add mode
-                setShowModal(true);
-              }}
-            >
-              <PlusCircle size={16} className="me-2" />
-              Add User
-            </button>
-          )}
+          
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              resetForm();
+              setEditMode(false);
+              setShowModal(true);
+            }}
+          >
+            <PlusCircle size={16} className="me-2" />
+            Add User
+          </button>
         </div>
       </div>
 
-      {/* User List */}
+      {/* LIST */}
       <div className="d-flex flex-column gap-3">
-        {users.length > 0 ? (
-          users.map((user) => (
-            <div
-              key={user.id}
-              className="card p-3 shadow-sm"
-              style={{
-                background:
-                  "linear-gradient(90deg, hsl(215, 25%, 12%) 0%, hsl(215, 25%, 10%) 100%)",
-                color: "hsl(210, 40%, 98%)",
-                border: "1px solid hsl(215, 20%, 25%)",
-              }}
-            >
-              <div className="d-flex justify-content-between align-items-center flex-wrap">
-                {/* Left: info */}
-                <div className="d-flex align-items-center gap-3">
-                  <div
-                    className="rounded-circle d-flex justify-content-center align-items-center"
-                    style={{
-                      width: "45px",
-                      height: "45px",
-                      backgroundColor: "hsl(215, 25%, 15%)",
-                    }}
-                  >
-                    <User size={20} className="text-primary" />
-                  </div>
-                  <div>
-                    <h6 className="fw-bold mb-1">{user.name}</h6>
-                    <div className="text-muted small d-flex align-items-center gap-2">
-                      <Mail size={14} />
-                      <span>{user.email}</span>
-                    </div>
-                    <div className="text-muted small d-flex align-items-center gap-2">
-                      <span>📞</span>
-                      <span>{user.phone || "-"}</span>
-                    </div>
-                  </div>
+        {users.map((user) => (
+          <div
+            key={user._id}
+            className="card p-3 shadow-sm"
+            style={{ backgroundColor: "#141A28" }}
+          >
+            <div className="d-flex justify-content-between align-items-center flex-wrap">
+              {/* USER INFO */}
+              <div className="d-flex align-items-center gap-3">
+                <div
+                  className="rounded-circle d-flex justify-content-center align-items-center"
+                  style={{ width: 45, height: 45, backgroundColor: "#1E2635" }}
+                >
+                  <User />
                 </div>
-
-                {/* Middle: role/join */}
-                <div className="text-end mt-2 mt-md-0 me-auto ms-3">
-                  <div className="d-flex align-items-center justify-content-end gap-2 mb-1">
-                    <Shield size={14} />
-                    <span className="small">{user.role}</span>
-                  </div>
-                  <div className="d-flex align-items-center justify-content-end gap-2 text-muted small">
-                    <Calendar size={14} />
-                    <span>Joined: {user.joinDate}</span>
-                  </div>
+                <div>
+                  <h6 className="fw-bold mb-1">{user.name}</h6>
+                  <small className="text-muted">
+                    <Mail size={14} /> {user.email}
+                  </small>
+                  <br />
+                  <small className="text-muted">📞 {user.phone}</small>
                 </div>
+              </div>
 
-                {/* NEW: Edit + Remove */}
-                {currentUserRole === "Admin" && (
-                  <div className="d-flex gap-2 mt-2 mt-md-0">
-                    <button
-                      className="btn btn-secondary border border-light btn-sm"
-                      onClick={() => openEditModal(user)}
-                    >
-                       Edit
-                    </button>
+              {/* ROLE + DATE */}
+              <div className="text-end">
+                <div className="d-flex justify-content-end gap-2 small">
+                  <Shield size={14} /> {user.role}
+                </div>
+                <div className="d-flex align-items-center justify-content-end gap-2 text-muted small">
+                  <Calendar size={14} />
+                  Joined: {user.joinDate}
+                </div>
+              </div>
 
-                    <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() => handleRemove(user.id)}
-                    >
-                      <Trash2 size={14} className="me-1" />
-                      Remove
-                    </button>
-                  </div>
-                )}
+              {/* ACTIONS */}
+              <div className="d-flex gap-2 mt-2">
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => {
+                    setEditMode(true);
+                    setEditUserId(user._id);
+                    setForm({
+                      name: user.name,
+                      email: user.email,
+                      role: user.role.charAt(0).toUpperCase() + user.role.slice(1),
+                      phone: user.phone,
+                    });
+                    setShowModal(true);
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => confirmDelete(user._id, user.name)}
+                >
+                  <Trash2 size={14} className="me-1" />
+                  {/* Remove */}
+                </button>
               </div>
             </div>
-          ))
-        ) : (
-          <div className="text-center text-muted mt-4">
-            No users found.
           </div>
-        )}
+        ))}
       </div>
 
-      {/* Modal - simple controlled modal */}
+      {/* ADD/EDIT MODAL */}
       {showModal && (
-        <div
-          className="modal d-block"
-          tabIndex="-1"
-          role="dialog"
-          onMouseDown={(e) => {
-            // click outside to close
-            if (e.target.classList.contains("modal")) setShowModal(false);
-          }}
-        >
-          <div className="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div className="modal d-block">
+          <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
-              <form onSubmit={handleAddUser}>
+              <form onSubmit={handleUserSubmit}>
                 <div className="modal-header">
-                  <h5 className="modal-title d-flex align-items-center">
-                    <PlusCircle size={18} className="me-2" />
-                    {editMode ? "Edit User" : "Add New User"}
-                  </h5>
+                  <h5>{editMode ? "Edit User" : "Add User"}</h5>
                   <button
                     type="button"
                     className="btn-close"
-                    aria-label="Close"
                     onClick={() => setShowModal(false)}
-                  />
+                  ></button>
                 </div>
 
                 <div className="modal-body">
                   <div className="row g-3">
-                    <div className="col-12 col-md-6">
-                      <label className="form-label">Name</label>
+
+                    <div className="col-md-6">
+                      <label>Name</label>
                       <input
-                        className={`form-control ${
-                          errors.name ? "is-invalid" : ""
-                        }`}
+                        className="form-control"
                         value={form.name}
-                        onChange={(e) =>
-                          setForm((p) => ({ ...p, name: e.target.value }))
-                        }
-                        placeholder="Full name"
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
                       />
-                      {errors.name && (
-                        <div className="invalid-feedback">{errors.name}</div>
-                      )}
                     </div>
 
-                    <div className="col-12 col-md-6">
-                      <label className="form-label">Email</label>
+                    <div className="col-md-6">
+                      <label>Email</label>
                       <input
-                        className={`form-control ${
-                          errors.email ? "is-invalid" : ""
-                        }`}
-                        value={form.email}
-                        onChange={(e) =>
-                          setForm((p) => ({ ...p, email: e.target.value }))
-                        }
-                        placeholder="user@example.com"
+                        className="form-control"
                         type="email"
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
                       />
-                      {errors.email && (
-                        <div className="invalid-feedback">{errors.email}</div>
-                      )}
                     </div>
 
-                    <div className="col-12 col-md-6">
-                      <label className="form-label">Role</label>
+                    <div className="col-md-6">
+                      <label>Role</label>
                       <select
                         className="form-select"
                         value={form.role}
-                        onChange={(e) =>
-                          setForm((p) => ({ ...p, role: e.target.value }))
-                        }
+                        onChange={(e) => setForm({ ...form, role: e.target.value })}
                       >
-                        <option value="User">User</option>
-                        <option value="Manager">Manager</option>
+                        <option>User</option>
+                        <option>Manager</option>
                       </select>
                     </div>
 
-                    <div className="col-12 col-md-6">
-                      <label className="form-label">Phone</label>
+                    <div className="col-md-6">
+                      <label>Phone</label>
                       <input
-                        className={`form-control ${
-                          errors.phone ? "is-invalid" : ""
-                        }`}
+                        className="form-control"
                         value={form.phone}
-                        onChange={(e) =>
-                          setForm((p) => ({ ...p, phone: e.target.value }))
-                        }
-                        placeholder="9988006677"
-                        inputMode="tel"
+                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
                       />
-                      {errors.phone && (
-                        <div className="invalid-feedback">{errors.phone}</div>
-                      )}
                     </div>
 
-                    {/* Password generator */}
-                    <div className="col-12">
-                      <div className="d-flex align-items-start gap-3">
-                        <div style={{ flex: 1 }}>
-                          <label className="form-label">
-                            {editMode ? "New Password (optional)" : "Auto-generated password"}
-                          </label>
-
-                          <div className="input-group">
-                            <input
-                              className="form-control"
-                              value={generatedPassword}
-                              readOnly
-                              type={showPassword ? "text" : "password"}
-                              placeholder={
-                                editMode
-                                  ? "Click Generate to change password"
-                                  : "Click Generate"
-                              }
-                            />
-
-                            <button
-                              type="button"
-                              className="btn btn-outline-secondary"
-                              onClick={() => handleGenerate(12)}
-                              title="Generate password"
-                            >
-                              <Key size={14} className="me-1" />
-                              Generate
-                            </button>
-
-                            <button
-                              type="button"
-                              className="btn btn-outline-secondary"
-                              onClick={() => setShowPassword((s) => !s)}
-                              title={showPassword ? "Hide" : "Show"}
-                            >
-                              {showPassword ? "Hide" : "Show"}
-                            </button>
-
-                            <button
-                              type="button"
-                              className="btn btn-outline-secondary"
-                              onClick={handleCopyPassword}
-                              disabled={!generatedPassword}
-                              title="Copy password"
-                            >
-                              <Copy size={14} />
-                            </button>
-                          </div>
-
-                          
+                    {!editMode && (
+                      <div className="col-12">
+                        <label>Password (Auto)</label>
+                        <div className="input-group">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            className="form-control"
+                            value={generatedPassword}
+                            readOnly
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary"
+                            onClick={() => {
+                              setGeneratedPassword(generatePassword());
+                              setShowPassword(true);
+                            }}
+                          >
+                            <Key size={14} className="me-1" /> Generate
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary"
+                            disabled={!generatedPassword}
+                            onClick={async () =>
+                              await navigator.clipboard.writeText(generatedPassword)
+                            }
+                          >
+                            <Copy size={14} />
+                          </button>
                         </div>
-
-                        
-                        
                       </div>
-                    </div>
+                    )}
+
                   </div>
                 </div>
 
                 <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => setShowModal(false)}
-                  >
+                  <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    {editMode ? "Save Changes" : "Add user"}
+                  <button className="btn btn-primary" type="submit">
+                    {editMode ? "Save Changes" : "Add User"}
                   </button>
                 </div>
               </form>
@@ -522,6 +382,34 @@ const AllUsers = () => {
           </div>
         </div>
       )}
+
+      {/* CONFIRM DELETE MODAL */}
+      {showDeleteModal && (
+        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content" style={{ backgroundColor: "#1B2230", color: "#fff" }}>
+              <div className="modal-header">
+                <h5>Delete Confirmation</h5>
+                <button className="btn-close btn-close-white" onClick={() => setShowDeleteModal(false)}></button>
+              </div>
+              <div className="modal-body text-center ">
+                <p>Are you sure you want to delete : <strong className="text-white">{deleteUserName} ?</strong> </p>
+                {/* <h6 className="fw-bold className="text-primary"">{deleteUserName}</h6> */}
+                <p className="text-muted small mt-3">This action cannot be undone!</p>
+              </div>
+              <div className="modal-footer justify-content-center gap-3">
+                <button className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>
+                  Cancel
+                </button>
+                <button className="btn btn-danger" onClick={handleDeleteUser}>
+                  <Trash2 size={14} className="me-1" /> Yes, Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
